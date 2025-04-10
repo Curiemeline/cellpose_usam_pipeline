@@ -1,10 +1,9 @@
-import os, random, glob, cv2, tifffile
+import os, random, glob, cv2, tifffile, argparse
 import numpy as np
 
-INPUT = r"D:\COPPEY\Biolectricity\Dataset\20241105_densities_ibidi_rpe1_mdck"
-OUTPUT = r"D:\micro_sam\Data"
 
-def generate_random_crops(input, n_files, patterns, extension=".tif"):
+
+def generate_random_crops(input, n_files, patterns, extension):
 
     # Get a list of n_files random files in the input directory
     print(input)
@@ -33,7 +32,11 @@ def crop_img(rfiles, output_dir, size):
         tifffile.imwrite(os.path.join(output_dir, os.path.basename(file)), crop_img)
 
 
-        
-rfiles = generate_random_crops(INPUT, 10, ["488"])        # TODO: make it a user input ? using args
+if __name__ == "__main__":
+    
+    INPUT = r"D:\COPPEY\Biolectricity\Dataset\20241105_densities_ibidi_rpe1_mdck"
+    OUTPUT = r"D:\micro_sam\Data"
+    
+    rfiles = generate_random_crops(INPUT, 10, ["488"])        # TODO: make it a user input ? using args
 
-crop_img(rfiles, OUTPUT, size=400)
+    crop_img(rfiles, OUTPUT, size=400)
