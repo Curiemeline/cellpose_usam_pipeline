@@ -312,4 +312,4 @@ def tracking_centroids(input_folder):
 
 
 
-run_cellpose_cli(INPUT_FOLDER, model_type=MODEL_TYPE, diameter=DIAMETER)
+#run_cellpose_cli(INPUT_FOLDER, model_type=MODEL_TYPE, diameter=DIAMETER)
