@@ -1,4 +1,5 @@
 import argparse
+from Source.segmentation import run_cellpose_cli, tracking_centroids
 from Source.crops import generate_random_crops, crop_img, group_images_into_stacks, generate_random_crops_from_stacks
 
 def main():
@@ -10,9 +11,18 @@ def main():
     parser.add_argument('--n_files', type=int, default=10, help="Number of files to sample")
     parser.add_argument('--crop_size', type=int, default=400, help="Crop size")
     parser.add_argument('--extension', type=str, default=".tif", help="File extension to match")
-
     parser.add_argument('--stack',  action='store_true', help="Stack images")
+
+    parser.add_argument('--segment',  action='store_true', help="Activate segmentation")
+    parser.add_argument('--diameter', type=int, default=80, help="Diameter of the cells")
+    parser.add_argument('--model', type=str, default="cyto3", help="File extension to match")
+    
     args = parser.parse_args()
+    
+    if args.segment:
+        print("Segmentation is activated.")
+        run_cellpose_cli(input_folder=args.output, model_type=args.model, diameter=args.diameter)
+        #tracking_centroids(input_folder=args.output)    # TODO Check si c'est des images 2D Pas besoin de tracking
 
     if args.stack and args.crop:
         print("Stacking images and cropping...")
