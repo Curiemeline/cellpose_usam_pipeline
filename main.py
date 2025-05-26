@@ -1,6 +1,8 @@
 import argparse
 from Source.segmentation import run_cellpose_cli, tracking_centroids
-from Source.crops import generate_random_crops, crop_img, group_images_into_stacks, generate_random_crops_from_stacks
+from Source.crops import generate_random_crops, crop_img
+from Source.annotation_plugin import launch_annotation_viewer
+from Source.finetune import finetune_cellpose
 
 def main():
     parser = argparse.ArgumentParser(description="Main pipeline", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -44,5 +46,11 @@ def main():
         print("No stack or crop operation performed.")
 
 
+
 if __name__ == "__main__":
-    main()
+    #print("main")
+    #main()
+    print("launching annotation viewer")
+    launch_annotation_viewer()
+    # print("finetuning cellpose")
+    # finetune_cellpose()
