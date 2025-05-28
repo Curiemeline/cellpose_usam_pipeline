@@ -73,6 +73,8 @@ from cellpose import models, io
 
 
 from cellpose import models, io, train
+import matplotlib.pyplot as plt
+import os
 
 def finetune_cellpose():
     # train_dir = "/Users/emeline.fratacci/Unit/micro_sam/cellpose_usam_pipeline/Data_output"
@@ -80,7 +82,7 @@ def finetune_cellpose():
 
     train_dir = "D:\micro_sam\Data_output"
     test_dir = "D:\micro_sam\Data_test"
-
+    save_dir = "D:\micro_sam\models"
     output = io.load_train_test_data(train_dir, test_dir,
                                     mask_filter="_seg.npy", look_one_level_down=False)
     images, labels, image_names, test_images, test_labels, image_names_test = output
@@ -109,7 +111,25 @@ def finetune_cellpose():
         model.net,
         train_data=X, train_labels=Y,
         weight_decay=1e-4, SGD=True, learning_rate=0.1,
-        n_epochs=100, model_name="my_new_model",
+        n_epochs=60, model_name="my_new_model",
         channel_axis=-1
     )
 
+    # Plot et sauvegarde
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Train Loss')
+
+    plt.plot(test_losses, label='Test Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Test Loss over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Chemin de sauvegarde
+    save_path = os.path.join(save_dir, "loss_curve.png")
+    plt.savefig(save_path, dpi=300)
+    print(f"Courbe de loss sauvegardée dans : {save_path}")
+
+    plt.show()
