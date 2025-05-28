@@ -11,7 +11,7 @@ from tifffile import imwrite, imread, TiffWriter
 
 ## Global variable declaration. To be modified by user.
 
-INPUT_FOLDER = r"D:\micro_sam\Data"
+INPUT_FOLDER = r"D:\micro_sam\Data_output"
 OUTPUT_SUFFIX = "_seg"
 MODEL_TYPE = "cyto3"  # Options: 'cyto', 'nuclei', or custom
 CHANNELS = [1, 0]  # First is cytoplasm, second is nuclei (0 = grayscale)
