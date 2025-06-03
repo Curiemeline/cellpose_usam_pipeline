@@ -5,7 +5,11 @@ from Source.annotation_plugin import launch_2dannotation_viewer, launch_3dannota
 from Source.finetune import finetune_cellpose
 import numpy as np
 import os
-from tifffile import imwrite
+import glob
+from tifffile import imwrite, imread
+
+from cellpose import models
+
 def launch_annotator2d (args):
     """
     Function to set the mode to 2D annotator in micro-sam.
@@ -14,16 +18,45 @@ def launch_annotator2d (args):
         print("Cropping images before launching 2D annotator...")
         rfiles = generate_random_crops(input=args.input, n_files=args.n_files, patterns=args.pattern, extension=args.extension)
         print(f"Generated {len(rfiles)} random crops from the input directory.")
-        cropped_img = crop_img(rfiles, output_dir=args.output, size=args.crop_size)
-        stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
-        imwrite(os.path.join(args.output, "output_stack.tif"), stack)
-        print(f"Cropped images saved to {args.output}.")
+        cropped_img = crop_img(sorted(rfiles), output_dir=args.output, size=args.crop_size)
+        # # cropped_img = crop_img(rfiles, output_dir=args.output, size=args.crop_size)
+        # # stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
+        # # # Forcer la forme (height, width, num_images)
+        # # # stack = np.transpose(stack, (1, 2, 0))
+        # # # print("After permute:", stack.shape)
+        # # print(f"Stack shape: {stack.shape}, dim: {stack.ndim}")
+        # # imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
+        # # print(f"Cropped images saved to {args.output}.")
+        
         
     if args.segment:
         print("Segmenting...")
         run_cellpose_cli(input_folder=args.output, model_type=args.model, diameter=args.diameter)
+
+        mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.TIF")))
+        print(f"Found {len(mask_files)} mask files for stacking.")
+        masks = [imread(m) for m in mask_files]
+        print(f"Number of masks loaded: {len(masks)}")
+        print(f"Shape of first mask: {masks[0].shape}")
+        imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
     
-    launch_2dannotation_viewer()
+        # print("stack shape b4 cellpose", stack.shape)
+        # model = models.Cellpose(model_type='cyto')
+        # masks, flows, styles, diams = model.eval(stack, diameter=30, channels=[0, 0])
+        # print("Masks shape:", masks.shape)
+
+        # for i, mask in enumerate(masks):
+        #     imwrite(os.path.join(args.output, f"output_mask{i}_testmathieu.tif"), mask, imagej=True)
+
+    stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
+    # Forcer la forme (height, width, num_images)
+    # stack = np.transpose(stack, (1, 2, 0))
+    # print("After permute:", stack.shape)
+    print(f"Stack shape: {stack.shape}, dim: {stack.ndim}")
+    imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
+    print(f"Cropped images saved to {args.output}.")
+           
+    launch_3dannotation_viewer()
 
     
 
@@ -92,9 +125,9 @@ def main():
 
 
 if __name__ == "__main__":
-    # print("main")
-    # main()
-    #print("launching annotation viewer")
+    print("main")
+    main()
+    # print("launching annotation viewer")
     # launch_annotation_viewer()
     # print("finetuning cellpose")
-    finetune_cellpose()
+    # finetune_cellpose()

@@ -109,7 +109,7 @@ def generate_random_crops(input, n_files, patterns, extension):
 
 
     random_files = random.sample(
-        [f for f in glob.glob(os.path.join(input, f"*{extension}"))
+        [f for f in sorted(glob.glob(os.path.join(input, f"*{extension}")))
         if all(p in os.path.basename(f) for p in patterns)],
         n_files
     )
@@ -134,7 +134,7 @@ def crop_img(rfiles, output_dir, size):
         y = random.randint(0, h - size)
         cropped_img = img[y:y + size, x:x + size]
         list_cropped_img.append(cropped_img)
-        #tifffile.imwrite(os.path.join(output_dir, os.path.basename(file)), cropped_img)
+        tifffile.imwrite(os.path.join(output_dir, os.path.basename(file)), cropped_img)
 
     print(len(list_cropped_img))
     return list_cropped_img
