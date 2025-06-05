@@ -2,7 +2,7 @@ import argparse
 from Source.segmentation import run_cellpose_cli, tracking_centroids
 from Source.crops import generate_random_crops, crop_img, group_images_into_stacks
 from Source.annotation_plugin import launch_2dannotation_viewer, launch_3dannotation_viewer
-from Source.finetune import finetune_cellpose
+from Source.finetune import finetune_cellpose, split_dataset
 import numpy as np
 import os
 import glob
@@ -14,6 +14,14 @@ def launch_annotator2d (args):
     """
     Function to set the mode to 2D annotator in micro-sam.
     """
+
+    # Créer le chemin vers le dossier Stack (dans le dossier parent)
+    parent_dir = os.path.abspath(os.path.join(args.output, os.pardir))
+    stack_dir = os.path.join(parent_dir, "Stack")
+    os.makedirs(stack_dir, exist_ok=True)
+
+    
+
     if args.crop:
         print("Cropping images before launching 2D annotator...")
         rfiles = generate_random_crops(input=args.input, n_files=args.n_files, patterns=args.pattern, extension=args.extension)
@@ -38,8 +46,11 @@ def launch_annotator2d (args):
         masks = [imread(m) for m in mask_files]
         print(f"Number of masks loaded: {len(masks)}")
         print(f"Shape of first mask: {masks[0].shape}")
-        imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
-    
+        # # imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
+        # Sauvegarde
+        save_path_mask = os.path.join(stack_dir, "masks_stacked.tif")
+        imwrite(save_path_mask, np.stack(masks, axis=0), imagej=True)
+
         # print("stack shape b4 cellpose", stack.shape)
         # model = models.Cellpose(model_type='cyto')
         # masks, flows, styles, diams = model.eval(stack, diameter=30, channels=[0, 0])
@@ -53,10 +64,13 @@ def launch_annotator2d (args):
     # stack = np.transpose(stack, (1, 2, 0))
     # print("After permute:", stack.shape)
     print(f"Stack shape: {stack.shape}, dim: {stack.ndim}")
-    imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
+    # # imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
+    # Sauvegarde
+    save_path_raw = os.path.join(stack_dir, "raw_image_stacked.tif")
+    imwrite(save_path_raw, stack, imagej=True)
     print(f"Cropped images saved to {args.output}.")
            
-    launch_3dannotation_viewer()
+    launch_3dannotation_viewer(args)
 
     
 
@@ -68,8 +82,16 @@ def launch_annotator3d ():
     launch_3dannotation_viewer()
     print("Setting mode to 3D...")  # Placeholder for actual implementation
 
-
+import torch
 def main():
+
+    import torchvision
+    print(torchvision.__version__)
+
+    if torch.cuda.is_available():
+        print("torch")
+    else:
+        print("cpu")
     parser = argparse.ArgumentParser(description="Main pipeline", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--annotator2d', action='store_true', help="Activate 2D annotator")
@@ -129,5 +151,7 @@ if __name__ == "__main__":
     main()
     # print("launching annotation viewer")
     # launch_annotation_viewer()
+    #print("split train test")
+    #split_dataset(finetune_dir="D:\\micro_sam\\Datasets\\Output", train_ratio=0.8)
     # print("finetuning cellpose")
     # finetune_cellpose()

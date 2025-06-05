@@ -121,6 +121,8 @@ def generate_random_crops(input, n_files, patterns, extension):
 def crop_img(rfiles, output_dir, size):
     list_cropped_img = []  # List to store cropped images
     print(len(rfiles))
+
+    
     for file in rfiles:
         print(file)
         img = tifffile.imread(file)
@@ -143,7 +145,7 @@ def crop_img(rfiles, output_dir, size):
 if __name__ == "__main__":
     
     INPUT = r"D:\COPPEY\Biolectricity\Dataset\20241105_densities_ibidi_rpe1_mdck"
-    OUTPUT = r"D:\micro_sam\Data"
+    OUTPUT = r"D:\micro_sam\Datasets\Output"
     
     rfiles = generate_random_crops(INPUT, 10, ["488"])        # TODO: make it a user input ? using args
 

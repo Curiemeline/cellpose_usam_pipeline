@@ -10,6 +10,8 @@ from micro_sam.sam_annotator.annotator_2d import annotator_2d
 print(dir(micro_sam))
 from tifffile import imwrite
 
+from Source.finetune import finetune_cellpose, split_dataset
+
 def show_info_message(viewer, message):
     msg = QMessageBox(viewer.window._qt_window)
     msg.setIcon(QMessageBox.Information)
@@ -43,6 +45,18 @@ def add_save_button(viewer):
     btn = QPushButton("Sauver masque pour Cellpose")
     btn.clicked.connect(lambda: save_mask_as_tif(viewer))
     viewer.window.add_dock_widget(btn, area='right')
+
+
+def on_finetune_button_clicked(viewer, args):
+    split_dataset(finetune_dir=args.output)
+    finetune_cellpose(output_path=args.output)
+    show_info_message(viewer, "Finetuning terminé. Modèle sauvegardé dans le dossier 'Models'.")
+
+
+def add_finetune_button(viewer, args):
+    btn_finetune = QPushButton("Lancer le finetuning")
+    btn_finetune.clicked.connect(lambda: on_finetune_button_clicked(viewer, args))
+    viewer.window.add_dock_widget(btn_finetune, area='right')
 
 
 # def launch_annotation_viewer():
@@ -173,8 +187,10 @@ def launch_2dannotation_viewer():
     napari.run()
     
 
-def launch_3dannotation_viewer():
+def launch_3dannotation_viewer(args):
     # Obligatoire avant tout QWidget comme QFileDialog
+    # app = QApplication.instance()
+    # if app is None:
     app = QApplication(sys.argv)
 
     # Crée le state
@@ -225,6 +241,7 @@ def launch_3dannotation_viewer():
     # Étape 4. Lancer le viewer avec tout préchargé
     viewer = napari.Viewer()
     add_save_button(viewer)
+    add_finetune_button(viewer, args)
 
     annotator_3d(
         viewer=viewer,
@@ -237,6 +254,8 @@ def launch_3dannotation_viewer():
 
 
     napari.run()
+
+
 
 if __name__ == "__main__":
     #launch_2dannotation_viewer()

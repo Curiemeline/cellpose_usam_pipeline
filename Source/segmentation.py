@@ -11,7 +11,7 @@ from tifffile import imwrite, imread, TiffWriter
 
 ## Global variable declaration. To be modified by user.
 
-INPUT_FOLDER = r"D:\micro_sam\Data_output"
+INPUT_FOLDER = r"D:\micro_sam\Datasets\Output"
 OUTPUT_SUFFIX = "_seg"
 MODEL_TYPE = "cyto3"  # Options: 'cyto', 'nuclei', or custom
 CHANNELS = [1, 0]  # First is cytoplasm, second is nuclei (0 = grayscale)
@@ -90,6 +90,7 @@ def run_cellpose_cli(input_folder, model_type, diameter, chan1=1, chan2=0):
     # Construct the CLI command
     command = [
         "cellpose",
+        "--use_gpu",                            # Use GPU if available
         "--verbose",
         "--dir", input_folder,                  # Directory containing the images
         "--pretrained_model", model_type,       # Model type
