@@ -5,6 +5,7 @@ from Source.annotation_plugin import launch_2dannotation_viewer, launch_3dannota
 from Source.finetune import finetune_cellpose, split_dataset
 import numpy as np
 import os
+import shutil
 import glob
 from tifffile import imwrite, imread
 
@@ -20,13 +21,30 @@ def launch_annotator2d (args):
     stack_dir = os.path.join(parent_dir, "Stack")
     os.makedirs(stack_dir, exist_ok=True)
 
-    
+    if args.crop == False:
+        print("no cropping, loading images from input directory...")
+        image_files = sorted([
+            os.path.join(args.input, f)
+            for f in os.listdir(args.input)
+            if f.lower().endswith((".tif", ".tiff", ".TIF", ".TIFF"))
+        ])
+        
+        img_list = []
+        for img_path in image_files:
+            print(img_path)
+            img = imread(str(img_path))
+            img_list.append(img)
+        
+        stack = np.stack(img_list, axis=0)  # Stack the images along a new dimension
+        print("stacked original images")
 
     if args.crop:
         print("Cropping images before launching 2D annotator...")
         rfiles = generate_random_crops(input=args.input, n_files=args.n_files, patterns=args.pattern, extension=args.extension)
         print(f"Generated {len(rfiles)} random crops from the input directory.")
         cropped_img = crop_img(sorted(rfiles), output_dir=args.output, size=args.crop_size)
+
+        stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
         # # cropped_img = crop_img(rfiles, output_dir=args.output, size=args.crop_size)
         # # stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
         # # # Forcer la forme (height, width, num_images)
@@ -39,13 +57,25 @@ def launch_annotator2d (args):
         
     if args.segment:
         print("Segmenting...")
+        print(f"Input folder for segmentation: {args.output}")
+
+        if args.crop == False:
+            print("Copying original images from input directory to output directory...")
+            # Copier tous les fichiers depuis args.input vers args.output
+            for filename in os.listdir(args.input):
+                src_path = os.path.join(args.input, filename)
+                dst_path = os.path.join(args.output, filename)
+                if os.path.isfile(src_path):  # Ignore les sous-dossiers
+                    shutil.copy(src_path, dst_path)
+
+        print("Segmenting images from output directory...")
         run_cellpose_cli(input_folder=args.output, model_type=args.model, diameter=args.diameter)
 
         mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.TIF")))
         print(f"Found {len(mask_files)} mask files for stacking.")
         masks = [imread(m) for m in mask_files]
         print(f"Number of masks loaded: {len(masks)}")
-        print(f"Shape of first mask: {masks[0].shape}")
+
         # # imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
         # Sauvegarde
         save_path_mask = os.path.join(stack_dir, "masks_stacked.tif")
@@ -59,7 +89,7 @@ def launch_annotator2d (args):
         # for i, mask in enumerate(masks):
         #     imwrite(os.path.join(args.output, f"output_mask{i}_testmathieu.tif"), mask, imagej=True)
 
-    stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
+    
     # Forcer la forme (height, width, num_images)
     # stack = np.transpose(stack, (1, 2, 0))
     # print("After permute:", stack.shape)

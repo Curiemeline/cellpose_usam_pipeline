@@ -116,7 +116,7 @@ def add_finetune_button(viewer, args):
 import napari
 import sys
 from qtpy.QtWidgets import QApplication, QFileDialog
-from micro_sam.sam_annotator import annotator_2d, _state, annotator_3d
+from micro_sam.sam_annotator import annotator_2d, _state, annotator_3d, _widgets
 import imageio.v3 as imageio
 import os
 import torch
@@ -243,15 +243,36 @@ def launch_3dannotation_viewer(args):
     add_save_button(viewer)
     add_finetune_button(viewer, args)
 
-    annotator_3d(
+    viewer = annotator_3d(
         viewer=viewer,
         image=image,
         segmentation_result=mask,               #  An initial segmentation to load.
                                                 # This can be used to correct segmentations with Segment Anything or to save and load progress.
                                                 # The segmentation will be loaded as the 'committed_objects' layer.
         embedding_path=embedding_save_path,
+        return_viewer=True
     )
+    # print(viewer.layers)  # Voir quelles couches sont présentes
+    # print("current_object" in viewer.layers)     # True/False
+    # _widgets._commit_impl(viewer, layer="current_object", preserve_mode="pixels", preservation_threshold=1)
 
+    # for name, dock in viewer.window._dock_widgets.items():
+    #     widget = getattr(dock, 'widget', lambda: None)()
+    #     print("Dock:", name)
+    #     print("Widget type:", type(widget))
+    #     print("Attributes:", dir(widget))
+
+    # # Modifier les paramètres par défaut du widget "commit"
+    # commit_widget = widgets["commit_widget"]  # c’est un magicgui Widget
+
+    # # Modifier la valeur sélectionnée dans le champ 'layer'
+    # commit_widget.layer.value = "current_object"
+
+    # # Modifier la valeur sélectionnée dans le champ 'preserve_mode'
+    # commit_widget.preserve_mode.value = "pixels"
+
+    # # Modifier le seuil
+    # commit_widget.preservation_threshold.value = 1.0
 
     napari.run()
 

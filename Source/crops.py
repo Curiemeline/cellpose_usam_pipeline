@@ -17,7 +17,7 @@ def group_images_into_stacks(input_folder, output_folder):
     if not isinstance(input_folder, str):
         raise TypeError(f"Input must be a string representing the file path but got {type(input_folder)}")
     # Regex to parse metadata from filenames
-    pattern = r"([^_]+)_w(.+)_s(\d+)_t(\d+).TIF"      # (\d+) is a group that matches any digit. The parentheses are used to group the digits
+    pattern = r"([^_]+)_w(.+)_s(\d+)_t(\d+).TIF"      # (\d+) is a group that matches any digit. The parentheses are used to group the digits   #TODO Changer le pattern !!!!!
     grouped_files = {}                                                  # Final dictionary that will hold the group of files per image
 
     # Organize files into groups
@@ -107,6 +107,8 @@ def generate_random_crops(input, n_files, patterns, extension):
     #random_files=random.sample(glob.glob(os.path.join(input, "*.tif")), n_files)
     #random_files=random.sample(glob.glob(os.path.join(input, f"*{pattern}*{extension}")), n_files)
 
+    if patterns is None or len(patterns) == 0:
+        patterns = [""]
 
     random_files = random.sample(
         [f for f in sorted(glob.glob(os.path.join(input, f"*{extension}")))
