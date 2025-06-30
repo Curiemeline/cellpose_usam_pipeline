@@ -69,9 +69,9 @@ def launch_annotator2d (args):
                     shutil.copy(src_path, dst_path)
 
         print("Segmenting images from output directory...")
-        run_cellpose_cli(input_folder=args.output, model_type=args.model, diameter=args.diameter)
+        run_cellpose_cli(input_folder=args.output, model_type=args.model, custom_model=args.custom_model, diameter=args.diameter)
 
-        mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.TIF")))
+        mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.tif")))
         print(f"Found {len(mask_files)} mask files for stacking.")
         masks = [imread(m) for m in mask_files]
         print(f"Number of masks loaded: {len(masks)}")
@@ -138,7 +138,8 @@ def main():
 
     parser.add_argument('--segment',  action='store_true', help="Activate segmentation")
     parser.add_argument('--diameter', type=int, default=80, help="Diameter of the cells")
-    parser.add_argument('--model', type=str, default="cyto3", help="File extension to match")
+    parser.add_argument('--model', type=str, default="cpsam", help="File extension to match")
+    parser.add_argument('--custom_model', type=str, default=None, help="Path to custom model for segmentation")
     
     args = parser.parse_args()
     

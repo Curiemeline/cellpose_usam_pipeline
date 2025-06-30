@@ -5,53 +5,53 @@ from natsort import natsorted
 
 ############################################################################################## WIP 
 
-def group_images_into_stacks(input_folder, output_folder):
-    """
-    Groups images into stacks and saves them as .tif files.
+# # # # # def group_images_into_stacks(input_folder, output_folder):
+# # # # #     """
+# # # # #     Groups images into stacks and saves them as .tif files.
 
-    Parameters:
-    - input_folder: Directory with input images.
-    - output_folder: Directory to save stacks.
-    """
+# # # # #     Parameters:
+# # # # #     - input_folder: Directory with input images.
+# # # # #     - output_folder: Directory to save stacks.
+# # # # #     """
     
-    if not isinstance(input_folder, str):
-        raise TypeError(f"Input must be a string representing the file path but got {type(input_folder)}")
-    # Regex to parse metadata from filenames
-    pattern = r"([^_]+)_w(.+)_s(\d+)_t(\d+).TIF"      # (\d+) is a group that matches any digit. The parentheses are used to group the digits   #TODO Changer le pattern !!!!!
-    grouped_files = {}                                                  # Final dictionary that will hold the group of files per image
+# # # # #     if not isinstance(input_folder, str):
+# # # # #         raise TypeError(f"Input must be a string representing the file path but got {type(input_folder)}")
+# # # # #     # Regex to parse metadata from filenames
+# # # # #     pattern = r"([^_]+)_w(.+)_s(\d+)_t(\d+).TIF"      # (\d+) is a group that matches any digit. The parentheses are used to group the digits   #TODO Changer le pattern !!!!!
+# # # # #     grouped_files = {}                                                  # Final dictionary that will hold the group of files per image
 
-    # Organize files into groups
-    for f in natsorted(os.listdir(input_folder)):                       # For each file from the sorted list of files in the input folder
-        if f.startswith("._") or not f.lower().endswith(".tif"):    
-            continue                                                    # Skip possible hidden files (start with ._) and unwanted files (not .TIF or .tif) 
+# # # # #     # Organize files into groups
+# # # # #     for f in natsorted(os.listdir(input_folder)):                       # For each file from the sorted list of files in the input folder
+# # # # #         if f.startswith("._") or not f.lower().endswith(".tif"):    
+# # # # #             continue                                                    # Skip possible hidden files (start with ._) and unwanted files (not .TIF or .tif) 
         
-        match = re.match(pattern, f)                                    # Apply our defined pattern to each file, and only work with the matches
+# # # # #         match = re.match(pattern, f)                                    # Apply our defined pattern to each file, and only work with the matches
 
-        if match:
+# # # # #         if match:
 
-            basename, wavelength, stage, time = match.groups()               # match.groups() returns a tuple with the matched groups which are in () in the pattern defined above. So all (\d+). We never use time actually.
-            key = (basename, wavelength, stage)                              # This is the unique key, or tuple, for an image
+# # # # #             basename, wavelength, stage, time = match.groups()               # match.groups() returns a tuple with the matched groups which are in () in the pattern defined above. So all (\d+). We never use time actually.
+# # # # #             key = (basename, wavelength, stage)                              # This is the unique key, or tuple, for an image
 
-            if key not in grouped_files:                                # If the key is not in the dictionary, meaning we did not group the files for this image yet, create an empty list
-                grouped_files[key] = []
+# # # # #             if key not in grouped_files:                                # If the key is not in the dictionary, meaning we did not group the files for this image yet, create an empty list
+# # # # #                 grouped_files[key] = []
                 
-            grouped_files[key].append(os.path.join(input_folder, f))    # Append at this key, so for this stack of images, the file path of the file we are currently working with
+# # # # #             grouped_files[key].append(os.path.join(input_folder, f))    # Append at this key, so for this stack of images, the file path of the file we are currently working with
             
-    stack_files = []
-    # Now that we regrouped every files to its corresponding image, create stacks for each group
-    for key, file_list in grouped_files.items():                        # For each key (image) and its corresponding list of files (so all the timeframes 1, 2, 3, ...)
+# # # # #     stack_files = []
+# # # # #     # Now that we regrouped every files to its corresponding image, create stacks for each group
+# # # # #     for key, file_list in grouped_files.items():                        # For each key (image) and its corresponding list of files (so all the timeframes 1, 2, 3, ...)
 
-        stack = [imread(file) for file in file_list]                    # For each file in this list, read the image to transform it into numpy array and return a list of numpy array of all your timeframes
+# # # # #         stack = [imread(file) for file in file_list]                    # For each file in this list, read the image to transform it into numpy array and return a list of numpy array of all your timeframes
 
-        stack_array = np.stack(stack, axis=0)                           # Create a 3D array from the list of numpy array we created before 
-        basename, wavelength, stage = key                                    # Retrieve each component of our tuple, key, to name the output file
-        output_path = os.path.join(output_folder, f"{basename}_w{wavelength}_s{stage}_stack.tif")
-        imwrite(output_path, stack_array)
-        stack_files.append(output_path)
-        print(f"Saved stack: {output_path}")
+# # # # #         stack_array = np.stack(stack, axis=0)                           # Create a 3D array from the list of numpy array we created before 
+# # # # #         basename, wavelength, stage = key                                    # Retrieve each component of our tuple, key, to name the output file
+# # # # #         output_path = os.path.join(output_folder, f"{basename}_w{wavelength}_s{stage}_stack.tif")
+# # # # #         imwrite(output_path, stack_array)
+# # # # #         stack_files.append(output_path)
+# # # # #         print(f"Saved stack: {output_path}")
         
 
-    return stack_files
+# # # # #     return stack_files
 
 
 

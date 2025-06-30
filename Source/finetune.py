@@ -84,8 +84,9 @@ import torch
 def finetune_cellpose(output_path):
     # train_dir = "/Users/emeline.fratacci/Unit/micro_sam/cellpose_usam_pipeline/Data_output"
     # test_dir = "/Users/emeline.fratacci/Unit/micro_sam/cellpose_usam_pipeline/Data_test"
-
+    
     output_path = Path(output_path)
+    print(output_path)
     train_dir = output_path.parent / "Train"
     test_dir = output_path.parent / "Test"
     save_dir = output_path.parent.parent / "Models"
@@ -99,16 +100,21 @@ def finetune_cellpose(output_path):
     print(f"Save directory: {save_dir}")
 
     output = io.load_train_test_data(str(train_dir), str(test_dir),
-                                    mask_filter="_seg.npy", look_one_level_down=False)  # !!! Need to add str to train_dir and test_dir because they are Path objects defined above, and io.load_train_test_data expects strings
+                                    mask_filter="_cp_masks", look_one_level_down=False)  # !!! Need to add str to train_dir and test_dir because they are Path objects defined above, and io.load_train_test_data expects strings
     images, labels, image_names, test_images, test_labels, image_names_test = output
-    print(images[1].ndim)
-    model = models.CellposeModel(gpu=True, model_type='cyto3', pretrained_model='cyto3', diam_mean=80)
+
+    print(len(test_labels))
+    print([np.unique(lbl) for lbl in test_labels])
+    print([lbl.shape for lbl in test_labels])
+
+    # print(images[1].ndim)
+    model = models.CellposeModel(gpu=True, model_type='cpsam', pretrained_model='cpsam', diam_mean=80)
 
     # Avant d'appeler train.train_seg
     X, Y = [], []
     for x, y in zip(images, labels):  # x et y ont chacun shape (83, 512, 512, 2)
-        print("x",x.shape)
-        print("y",y.shape)
+        # print("x",x.shape)
+        # print("y",y.shape)
         X.append(x) # oblgiée de faire ça quand j'ai juste un 2D images comme par exemple (400, 400) et pas (83, 512, 512, 2)
         Y.append(y)
         # for t in range(x.shape[0]):
@@ -125,8 +131,9 @@ def finetune_cellpose(output_path):
     model_path, train_losses, test_losses = train.train_seg(
         model.net,
         train_data=X, train_labels=Y,
+        test_data=test_images, test_labels=test_labels,
         weight_decay=1e-4, SGD=True, learning_rate=0.1,
-        n_epochs=60, model_name="my_new_model_wo_cp",
+        n_epochs=60, model_name="cpsam_19tr_5te_60ep",
         channel_axis=-1
     )
 
@@ -144,7 +151,7 @@ def finetune_cellpose(output_path):
     plt.tight_layout()
 
     # Chemin de sauvegarde
-    save_path = os.path.join(save_dir, "loss_curve.png")
+    save_path = os.path.join(save_dir, "loss_curve_cpsam_hand.png")
     plt.savefig(save_path, dpi=300)
     print(f"Courbe de loss sauvegardée dans : {save_path}")
 
