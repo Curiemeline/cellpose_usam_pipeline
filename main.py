@@ -1,6 +1,6 @@
 import argparse
-from Source.segmentation import run_cellpose_cli, tracking_centroids
-from Source.crops import generate_random_crops, crop_img, group_images_into_stacks
+from Source.segmentation import run_cellpose_cli
+from Source.crops import generate_random_crops, crop_img
 from Source.annotation_plugin import launch_2dannotation_viewer, launch_3dannotation_viewer
 from Source.finetune import finetune_cellpose, split_dataset
 import numpy as np
@@ -11,7 +11,7 @@ from tifffile import imwrite, imread
 
 from cellpose import models
 
-def launch_annotator2d (args):
+def launch_annotator3d(args):
     """
     Function to set the mode to 2D annotator in micro-sam.
     """
@@ -105,11 +105,11 @@ def launch_annotator2d (args):
     
 
 
-def launch_annotator3d ():
+def launch_annotator2d(args):
     """
     Function to set the mode to 3D annotator in micro-sam.
     """
-    launch_3dannotation_viewer()
+    launch_2dannotation_viewer()
     print("Setting mode to 3D...")  # Placeholder for actual implementation
 
 import torch

@@ -39,6 +39,17 @@ def save_mask_as_tif(viewer):
         save_path += ".tif"
 
     imwrite(save_path, mask_data)
+
+    if mask_data.ndim > 1:
+        print(f"Le masque a {mask_data.shape[0]} couches.")
+        for i in range(mask_data.shape[0]):
+            mask = mask_data[i, ...] if mask_data.ndim > 1 else mask_data    # *Expression ternaire* qui prend la i-ème couche du masque si le masque a plus d'une dimension, sinon le garde tel quel
+                                                                                    # pour un array (10, 512, 512), ça revient à mask_data[i, :, :]. C'est une ellipse qui prends l’indice i sur le premier axe, et garde les autres dimensions telles quelles
+            
+            imwrite(save_path.replace(".tif", f"_{i}.tif"), mask)
+            print(f"Masque {i} sauvegardé à {save_path}")
+
+    
     show_info_message(viewer, f"Masque sauvegardé au format Cellpose :\n{save_path}")
 
 def add_save_button(viewer):
@@ -275,7 +286,6 @@ def launch_3dannotation_viewer(args):
     # commit_widget.preservation_threshold.value = 1.0
 
     napari.run()
-
 
 
 if __name__ == "__main__":
