@@ -1,5 +1,5 @@
 import argparse
-from Source.segmentation import run_cellpose_cli
+from Source.segmentation import run_cellpose_cli, extract_grads_gray
 from Source.crops import generate_random_crops, crop_img
 from Source.annotation_plugin import launch_2dannotation_viewer, launch_3dannotation_viewer
 from Source.finetune import finetune_cellpose, split_dataset
@@ -70,24 +70,26 @@ def launch_annotator3d(args):
 
         print("Segmenting images from output directory...")
         run_cellpose_cli(input_folder=args.output, model_type=args.model, custom_model=args.custom_model, diameter=args.diameter)
+        extract_grads_gray(input_folder=args.output)
 
         mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.tif")))
         print(f"Found {len(mask_files)} mask files for stacking.")
         masks = [imread(m) for m in mask_files]
-        print(f"Number of masks loaded: {len(masks)}")
+        print(f"Number of masks loaded: {len(masks)}, with total shape: {masks[0].shape}")
+
+        grads_files = sorted(glob.glob(os.path.join(args.output, "*_gradsXY_gray.tif")))
+        print(f"Found {len(grads_files)} gradient files for stacking.")
+        grads = [imread(g) for g in grads_files]
+        print(f"Number of gradients loaded: {len(grads)}, with total shape: {grads[0].shape}")
 
         # # imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
         # Sauvegarde
         save_path_mask = os.path.join(stack_dir, "masks_stacked.tif")
         imwrite(save_path_mask, np.stack(masks, axis=0), imagej=True)
 
-        # print("stack shape b4 cellpose", stack.shape)
-        # model = models.Cellpose(model_type='cyto')
-        # masks, flows, styles, diams = model.eval(stack, diameter=30, channels=[0, 0])
-        # print("Masks shape:", masks.shape)
+        save_path_grads = os.path.join(stack_dir, "grads_stacked.tif")
+        imwrite(save_path_grads, np.stack(grads, axis=0))
 
-        # for i, mask in enumerate(masks):
-        #     imwrite(os.path.join(args.output, f"output_mask{i}_testmathieu.tif"), mask, imagej=True)
 
     
     # Forcer la forme (height, width, num_images)

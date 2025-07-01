@@ -8,6 +8,7 @@ from natsort import natsorted
 from skimage.measure import regionprops
 from tifffile import imwrite, imread, TiffWriter
 
+from PIL import Image
 
 ## Global variable declaration. To be modified by user.
 
@@ -115,22 +116,24 @@ def run_cellpose_cli(input_folder, model_type, custom_model, diameter, chan1=1, 
         return None, result.stderr
     
 
-def extract_cellprobs_gray(input_folder):
+def extract_grads_gray(input_folder):
 
     for f in os.listdir(input_folder):
 
         if f.endswith("seg.npy"):
             mask_path = os.path.join(input_folder, f)
             data = np.load(mask_path, allow_pickle=True).item()
-            cellprobs = data['flows'][1]  # Extract cell probabilities
-            imwrite(os.path.join(input_folder, f.replace("seg.npy", "cellprobs_gray.tif")), cellprobs, imagej=True)
-            print(f"Extracted cell probabilities from {f} and saved as cellprobs_gray.tif")
+            gradsXY = data['flows'][0]  # Extract cell probabilities
+            print(gradsXY.shape)
+            gradsXY_gray = np.squeeze(np.dot(gradsXY[..., :3], [0.2989, 0.5870, 0.1140]))   # Pour enlever la première dimension, sinon ça donne (1, 400, 400, 3) et c'est pas accepté par microsam pour compute les embeddings. C'est soit 2D (400,400), soit 3D (10, 400, 400)
+            imwrite(os.path.join(input_folder, f.replace("seg.npy", "gradsXY_gray.tif")), gradsXY_gray)
+            print(f"Extracted cell probabilities from {f} and saved as gradsXY.tif")
 
 if __name__ == "__main__":
     # Example usage
     input_folder = "D:\micro_sam\Datasets\Output"
 
-    extract_cellprobs_gray(input_folder)
+    extract_grads_gray(input_folder)
 ######################################################################## NEW VERSION OF CELLPOSE_CLI WITH FILTERED IMAGES ########################################################################
 
 
