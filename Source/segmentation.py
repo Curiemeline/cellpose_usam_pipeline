@@ -248,75 +248,78 @@ import tempfile
 
 ######################################################################## Tracking using Centroids ########################################################################
 
-# # def tracking_centroids(input_folder):
+def tracking_centroids(input_folder):
     
-# #     for filename in natsorted(os.listdir(input_folder)):                                    # Loop over now segmented files
-# #         #if filename.endswith("first-day_w1445_s4_stack_seg.npy"):                          # Process only one mask file to test the code
-# #         if filename.endswith("seg.npy"):                                                    # Process only mask files
+    for filename in natsorted(os.listdir(input_folder)):                                    # Loop over now segmented files
+        #if filename.endswith("first-day_w1445_s4_stack_seg.npy"):                          # Process only one mask file to test the code
+        if filename.endswith("seg.npy"):                                                    # Process only mask files
 
-# #             mask_path = os.path.join(input_folder, filename)                                # Get path to mask file
-# #             data = np.load(mask_path, allow_pickle=True).item()                             # Load raw image stack because the .npy file doesn't only contain mask but also outlines, probabilities, flows, etc.
-# #             masks = data['masks']                                                           # and retrieve only the mask
+            mask_path = os.path.join(input_folder, filename)                                # Get path to mask file
+            data = np.load(mask_path, allow_pickle=True).item()                             # Load raw image stack because the .npy file doesn't only contain mask but also outlines, probabilities, flows, etc.
+            masks = data['masks']                                                           # and retrieve only the mask
             
-# #             relabeled_masks = np.zeros_like(masks)                                          # Initialize an empty array that has the same shape as original mask to store the relabeled masks
-# #             # # tracked_labels = {}                                                             # Dictionary to track labels across frames
+            relabeled_masks = np.zeros_like(masks)                                          # Initialize an empty array that has the same shape as original mask to store the relabeled masks
+            # # tracked_labels = {}                                                             # Dictionary to track labels across frames
             
-# #             for t in range(masks.shape[0]):                                                 # Process each timeframe. Here masks.shape[0] = 6 so it's gonna loop through the mask at timeframes 0, 1, 2, 3, 4, 5
-# #                 frame_mask = masks[t]
+            for t in range(masks.shape[0]):                                                 # Process each timeframe. Here masks.shape[0] = 6 so it's gonna loop through the mask at timeframes 0, 1, 2, 3, 4, 5
+                frame_mask = masks[t]
                 
-# #                 # # props = regionprops_table(                                                  # Using the library skimage.measure.regionprops_table,
-# #                 # #     frame_mask,                                                             # Compute for the current timeframe,
-# #                 # #     properties=['label', 'centroid']                                        # each cells label and centroid automatically, and store them in a dictionary called props
-# #                 # # )
+                # # props = regionprops_table(                                                  # Using the library skimage.measure.regionprops_table,
+                # #     frame_mask,                                                             # Compute for the current timeframe,
+                # #     properties=['label', 'centroid']                                        # each cells label and centroid automatically, and store them in a dictionary called props
+                # # )
                 
-# #                 # # frame_props = pd.DataFrame(props)                                           # Convert Dictionary to DataFrame for easier handling
-# #                 # # frame_props['Time'] = t                                                     # Add timepoint column
+                # # frame_props = pd.DataFrame(props)                                           # Convert Dictionary to DataFrame for easier handling
+                # # frame_props['Time'] = t                                                     # Add timepoint column
                 
-# #                 # # for i, row in frame_props.iterrows():                                       # Loop over each row in the DataFrame and retrieve centroids and labels
-# #                 # #     centroid_y, centroid_x = row['centroid-0'], row['centroid-1']
-# #                 # #     label_id = row['label']
-# #                     #print(frame_mask[int(centroid_y), int(centroid_x)])
+                # # for i, row in frame_props.iterrows():                                       # Loop over each row in the DataFrame and retrieve centroids and labels
+                # #     centroid_y, centroid_x = row['centroid-0'], row['centroid-1']
+                # #     label_id = row['label']
+                    #print(frame_mask[int(centroid_y), int(centroid_x)])
 
-# #                 if t == 0:                                                              # First frame: Initialize tracking
-# #                     relabeled_masks[t] = frame_mask                                     # Copy original labels
+                if t == 0:                                                              # First frame: Initialize tracking
+                    relabeled_masks[t] = frame_mask                                     # Copy original labels
 
-# #                     # # for label_id in np.unique(frame_mask):                              # Loop over all unique labels in the original mask  
-# #                     # #     if label_id == 0:                                               # Skip background labels
-# #                     # #         continue
-# #                     # #     tracked_labels[label_id] = [(t, label_id)]  
+                    # # for label_id in np.unique(frame_mask):                              # Loop over all unique labels in the original mask  
+                    # #     if label_id == 0:                                               # Skip background labels
+                    # #         continue
+                    # #     tracked_labels[label_id] = [(t, label_id)]  
 
-# #                 else:                                                                   # If not the first frame
-# #                                                                                         # Check if the centroid lies in a label from the previous frame
-# #                     prev_frame_mask = relabeled_masks[t - 1]
-# #                     current_frame_relabeled = np.zeros_like(frame_mask)                 # Create a new mask for next frame
+                else:                                                                   # If not the first frame
+                                                                                        # Check if the centroid lies in a label from the previous frame
+                    prev_frame_mask = relabeled_masks[t - 1]
+                    current_frame_relabeled = np.zeros_like(frame_mask)                 # Create a new mask for next frame
 
-# #                     # Compute centroids for all labels in the previous frame
-# #                     prev_props = regionprops(prev_frame_mask)               # Retrieve all labels from previous mask
-# #                     prev_centroids = {int(region.label): tuple(map(int, region.centroid)) for region in prev_props}
+                    # Compute centroids for all labels in the previous frame
+                    prev_props = regionprops(prev_frame_mask)               # Retrieve all labels from previous mask
+                    prev_centroids = {int(region.label): tuple(map(int, region.centroid)) for region in prev_props}
 
 
-# #                     # # for prev_region in prev_props:                          # For all the previous labels
-# #                     # #     prev_label = prev_region.label                      # Retrieve ID label
-# #                     # #     centroid_y, centroid_x = map(int, prev_region.centroid)  # Retrieve previous labels' centroids and convert them to int 
+                    # # for prev_region in prev_props:                          # For all the previous labels
+                    # #     prev_label = prev_region.label                      # Retrieve ID label
+                    # #     centroid_y, centroid_x = map(int, prev_region.centroid)  # Retrieve previous labels' centroids and convert them to int 
 
-# #                     # #     # Check if the previous centroids fall inside a label in the current frame
-# #                     # #     current_label = frame_mask[centroid_y, centroid_x]  # Stores the number of the label where the centroids fall
+                    # #     # Check if the previous centroids fall inside a label in the current frame
+                    # #     current_label = frame_mask[centroid_y, centroid_x]  # Stores the number of the label where the centroids fall
 
-# #                     # #     if current_label > 0:  # If the centroid is inside a label
-# #                     # #         # Propagate the previous label to the current frame
-# #                     # #         current_frame_relabeled[frame_mask == current_label] = prev_label   # All the pixels where the actual region we're looking at, so meaning where we have pixels = current label, for example = 3, we reassign all this region with the label of the previous frame
-# #                     # # # Update the relabeled masks for the current frame
-# #                     # # relabeled_masks[t] = current_frame_relabeled            # DANS LE NOUVEAU MASK on met la region réassignée
-# #                     for prev_label, (centroid_y, centroid_x) in prev_centroids.items():
-# #                         if 0 <= centroid_y < frame_mask.shape[0] and 0 <= centroid_x < frame_mask.shape[1]:
-# #                             current_label = frame_mask[centroid_y, centroid_x]
-# #                             if current_label > 0:  # Si le centroid tombe bien sur une cellule
-# #                                 ##tracked_labels[current_label] = prev_label  # Assigner le label précédent
-# #                                 current_frame_relabeled[frame_mask == current_label] = prev_label
+                    # #     if current_label > 0:  # If the centroid is inside a label
+                    # #         # Propagate the previous label to the current frame
+                    # #         current_frame_relabeled[frame_mask == current_label] = prev_label   # All the pixels where the actual region we're looking at, so meaning where we have pixels = current label, for example = 3, we reassign all this region with the label of the previous frame
+                    # # # Update the relabeled masks for the current frame
+                    # # relabeled_masks[t] = current_frame_relabeled            # DANS LE NOUVEAU MASK on met la region réassignée
+                    for prev_label, (centroid_y, centroid_x) in prev_centroids.items():
+                        if 0 <= centroid_y < frame_mask.shape[0] and 0 <= centroid_x < frame_mask.shape[1]:
+                            current_label = frame_mask[centroid_y, centroid_x]
+                            if current_label > 0:  # Si le centroid tombe bien sur une cellule
+                                ##tracked_labels[current_label] = prev_label  # Assigner le label précédent
+                                current_frame_relabeled[frame_mask == current_label] = prev_label
 
-# #                     relabeled_masks[t] = current_frame_relabeled
-# #             output_path = os.path.join(input_folder, filename.replace("_seg.npy", "_tracked.tif"))
-# #             imwrite(output_path, relabeled_masks)
+                    relabeled_masks[t] = current_frame_relabeled
+            output_path = os.path.join(input_folder, filename.replace("_seg.npy", "_tracked.tif"))
+            imwrite(output_path, relabeled_masks)
+
+
+
 
 
 

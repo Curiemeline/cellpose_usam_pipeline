@@ -1,5 +1,5 @@
 import argparse
-from Source.segmentation import run_cellpose_cli, extract_grads_gray
+from Source.segmentation import run_cellpose_cli, extract_grads_gray, tracking_centroids
 from Source.crops import generate_random_crops, crop_img
 from Source.annotation_plugin import launch_2dannotation_viewer, launch_3dannotation_viewer
 from Source.finetune import finetune_cellpose, split_dataset
@@ -71,6 +71,7 @@ def launch_annotator3d(args):
         print("Segmenting images from output directory...")
         run_cellpose_cli(input_folder=args.output, model_type=args.model, custom_model=args.custom_model, diameter=args.diameter)
         extract_grads_gray(input_folder=args.output)
+        tracking_centroids(input_folder=args.output)
 
         mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.tif")))
         print(f"Found {len(mask_files)} mask files for stacking.")
@@ -81,6 +82,11 @@ def launch_annotator3d(args):
         print(f"Found {len(grads_files)} gradient files for stacking.")
         grads = [imread(g) for g in grads_files]
         print(f"Number of gradients loaded: {len(grads)}, with total shape: {grads[0].shape}")
+
+        tracked_files = sorted(glob.glob(os.path.join(args.output, "*_tracked.tif")))
+        print(f"Found {len(tracked_files)} gradient files for stacking.")
+        tracked = [imread(g) for g in tracked_files]
+        print(f"Number of gradients loaded: {len(tracked)}, with total shape: {tracked[0].shape}")
 
         # # imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
         # Sauvegarde
@@ -111,7 +117,15 @@ def launch_annotator2d(args):
     """
     Function to set the mode to 3D annotator in micro-sam.
     """
-    launch_2dannotation_viewer()
+    if args.segment:
+        print("Segmenting...")
+        print(f"Input folder for segmentation: {args.output}")
+
+        print("Segmenting images from output directory...")
+        run_cellpose_cli(input_folder=args.input, model_type=args.model, custom_model=args.custom_model, diameter=args.diameter)
+        extract_grads_gray(input_folder=args.input)
+
+    launch_2dannotation_viewer(args)
     print("Setting mode to 3D...")  # Placeholder for actual implementation
 
 import torch

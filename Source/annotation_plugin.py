@@ -40,7 +40,9 @@ def save_mask_as_tif(viewer):
 
     imwrite(save_path, mask_data)
 
-    if mask_data.ndim > 1:
+    print("dim: ", mask_data.ndim)
+    
+    if mask_data.ndim > 2:
         print(f"Le masque a {mask_data.shape[0]} couches.")
         for i in range(mask_data.shape[0]):
             mask = mask_data[i, ...] if mask_data.ndim > 1 else mask_data    # *Expression ternaire* qui prend la i-ème couche du masque si le masque a plus d'une dimension, sinon le garde tel quel
@@ -132,7 +134,7 @@ import imageio.v3 as imageio
 import os
 import torch
 
-def launch_2dannotation_viewer():
+def launch_2dannotation_viewer(args):
     # Obligatoire avant tout QWidget comme QFileDialog
     app = QApplication(sys.argv)
 
@@ -141,7 +143,6 @@ def launch_2dannotation_viewer():
 
     model_type = "vit_b_lm"  # Type de modèle à utiliser pour les embeddings
 
-    print("hoy")
     # Étape 1. Demander l'image d'origine
     print("Sélectionnez l'image originale")
     image_path, _ = QFileDialog.getOpenFileName(caption="Sélectionner l'image originale")
@@ -184,14 +185,16 @@ def launch_2dannotation_viewer():
     # Étape 4. Lancer le viewer avec tout préchargé
     viewer = napari.Viewer()
     add_save_button(viewer)
+    add_finetune_button(viewer, args)
 
-    annotator_2d(
+    viewer = annotator_2d(
         viewer=viewer,
         image=image,
         segmentation_result=mask,               #  An initial segmentation to load.
                                                 # This can be used to correct segmentations with Segment Anything or to save and load progress.
                                                 # The segmentation will be loaded as the 'committed_objects' layer.
         embedding_path=embedding_save_path,
+        return_viewer=True
     )
 
 
