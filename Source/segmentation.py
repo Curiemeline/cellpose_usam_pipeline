@@ -124,10 +124,8 @@ def extract_grads_gray(input_folder):
             mask_path = os.path.join(input_folder, f)
             data = np.load(mask_path, allow_pickle=True).item()
             gradsXY = data['flows'][0]  # Extract cell probabilities
-            print(gradsXY.shape)
             gradsXY_gray = np.squeeze(np.dot(gradsXY[..., :3], [0.2989, 0.5870, 0.1140]))   # Pour enlever la première dimension, sinon ça donne (1, 400, 400, 3) et c'est pas accepté par microsam pour compute les embeddings. C'est soit 2D (400,400), soit 3D (10, 400, 400)
             imwrite(os.path.join(input_folder, f.replace("seg.npy", "gradsXY_gray.tif")), gradsXY_gray)
-            print(f"Extracted cell probabilities from {f} and saved as gradsXY.tif")
 
 if __name__ == "__main__":
     # Example usage
@@ -252,12 +250,13 @@ def tracking_centroids(input_folder):
     
     for filename in natsorted(os.listdir(input_folder)):                                    # Loop over now segmented files
         #if filename.endswith("first-day_w1445_s4_stack_seg.npy"):                          # Process only one mask file to test the code
-        if filename.endswith("seg.npy"):                                                    # Process only mask files
+        if filename.startswith("masks"):                                                    # Process only mask files
 
             mask_path = os.path.join(input_folder, filename)                                # Get path to mask file
-            data = np.load(mask_path, allow_pickle=True).item()                             # Load raw image stack because the .npy file doesn't only contain mask but also outlines, probabilities, flows, etc.
-            masks = data['masks']                                                           # and retrieve only the mask
-            
+            # data = np.load(mask_path, allow_pickle=True).item()                             # Load raw image stack because the .npy file doesn't only contain mask but also outlines, probabilities, flows, etc.
+            # masks = data['masks']  
+            masks = imread(mask_path)                                                         # and retrieve only the mask
+            print(f"Processing {filename} with shape {masks.shape}")                              # Print the shape of the mask to check if it is correct
             relabeled_masks = np.zeros_like(masks)                                          # Initialize an empty array that has the same shape as original mask to store the relabeled masks
             # # tracked_labels = {}                                                             # Dictionary to track labels across frames
             
@@ -277,7 +276,8 @@ def tracking_centroids(input_folder):
                 # #     label_id = row['label']
                     #print(frame_mask[int(centroid_y), int(centroid_x)])
 
-                if t == 0:                                                              # First frame: Initialize tracking
+                if t == 0:
+                    print("t0", t)                                                              # First frame: Initialize tracking
                     relabeled_masks[t] = frame_mask                                     # Copy original labels
 
                     # # for label_id in np.unique(frame_mask):                              # Loop over all unique labels in the original mask  
@@ -315,9 +315,9 @@ def tracking_centroids(input_folder):
                                 current_frame_relabeled[frame_mask == current_label] = prev_label
 
                     relabeled_masks[t] = current_frame_relabeled
-            output_path = os.path.join(input_folder, filename.replace("_seg.npy", "_tracked.tif"))
+            output_path = os.path.join(input_folder, filename.replace("masks", "tracked"))
             imwrite(output_path, relabeled_masks)
-
+            print(f"Tracking completed for {filename}. Output saved to {output_path}")
 
 
 
