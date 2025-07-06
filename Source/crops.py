@@ -5,53 +5,53 @@ from natsort import natsorted
 
 ############################################################################################## WIP 
 
-# # def group_images_into_stacks(input_folder, output_folder):
-# #     """
-# #     Groups images into stacks and saves them as .tif files.
+# # # # # def group_images_into_stacks(input_folder, output_folder):
+# # # # #     """
+# # # # #     Groups images into stacks and saves them as .tif files.
 
-# #     Parameters:
-# #     - input_folder: Directory with input images.
-# #     - output_folder: Directory to save stacks.
-# #     """
+# # # # #     Parameters:
+# # # # #     - input_folder: Directory with input images.
+# # # # #     - output_folder: Directory to save stacks.
+# # # # #     """
     
-# #     if not isinstance(input_folder, str):
-# #         raise TypeError(f"Input must be a string representing the file path but got {type(input_folder)}")
-# #     # Regex to parse metadata from filenames
-# #     pattern = r"([^_]+)_w(.+)_s(\d+)_t(\d+).TIF"      # (\d+) is a group that matches any digit. The parentheses are used to group the digits
-# #     grouped_files = {}                                                  # Final dictionary that will hold the group of files per image
+# # # # #     if not isinstance(input_folder, str):
+# # # # #         raise TypeError(f"Input must be a string representing the file path but got {type(input_folder)}")
+# # # # #     # Regex to parse metadata from filenames
+# # # # #     pattern = r"([^_]+)_w(.+)_s(\d+)_t(\d+).TIF"      # (\d+) is a group that matches any digit. The parentheses are used to group the digits   #TODO Changer le pattern !!!!!
+# # # # #     grouped_files = {}                                                  # Final dictionary that will hold the group of files per image
 
-# #     # Organize files into groups
-# #     for f in natsorted(os.listdir(input_folder)):                       # For each file from the sorted list of files in the input folder
-# #         if f.startswith("._") or not f.lower().endswith(".tif"):    
-# #             continue                                                    # Skip possible hidden files (start with ._) and unwanted files (not .TIF or .tif) 
+# # # # #     # Organize files into groups
+# # # # #     for f in natsorted(os.listdir(input_folder)):                       # For each file from the sorted list of files in the input folder
+# # # # #         if f.startswith("._") or not f.lower().endswith(".tif"):    
+# # # # #             continue                                                    # Skip possible hidden files (start with ._) and unwanted files (not .TIF or .tif) 
         
-# #         match = re.match(pattern, f)                                    # Apply our defined pattern to each file, and only work with the matches
+# # # # #         match = re.match(pattern, f)                                    # Apply our defined pattern to each file, and only work with the matches
 
-# #         if match:
+# # # # #         if match:
 
-# #             basename, wavelength, stage, time = match.groups()               # match.groups() returns a tuple with the matched groups which are in () in the pattern defined above. So all (\d+). We never use time actually.
-# #             key = (basename, wavelength, stage)                              # This is the unique key, or tuple, for an image
+# # # # #             basename, wavelength, stage, time = match.groups()               # match.groups() returns a tuple with the matched groups which are in () in the pattern defined above. So all (\d+). We never use time actually.
+# # # # #             key = (basename, wavelength, stage)                              # This is the unique key, or tuple, for an image
 
-# #             if key not in grouped_files:                                # If the key is not in the dictionary, meaning we did not group the files for this image yet, create an empty list
-# #                 grouped_files[key] = []
+# # # # #             if key not in grouped_files:                                # If the key is not in the dictionary, meaning we did not group the files for this image yet, create an empty list
+# # # # #                 grouped_files[key] = []
                 
-# #             grouped_files[key].append(os.path.join(input_folder, f))    # Append at this key, so for this stack of images, the file path of the file we are currently working with
+# # # # #             grouped_files[key].append(os.path.join(input_folder, f))    # Append at this key, so for this stack of images, the file path of the file we are currently working with
             
-# #     stack_files = []
-# #     # Now that we regrouped every files to its corresponding image, create stacks for each group
-# #     for key, file_list in grouped_files.items():                        # For each key (image) and its corresponding list of files (so all the timeframes 1, 2, 3, ...)
+# # # # #     stack_files = []
+# # # # #     # Now that we regrouped every files to its corresponding image, create stacks for each group
+# # # # #     for key, file_list in grouped_files.items():                        # For each key (image) and its corresponding list of files (so all the timeframes 1, 2, 3, ...)
 
-# #         stack = [imread(file) for file in file_list]                    # For each file in this list, read the image to transform it into numpy array and return a list of numpy array of all your timeframes
+# # # # #         stack = [imread(file) for file in file_list]                    # For each file in this list, read the image to transform it into numpy array and return a list of numpy array of all your timeframes
 
-# #         stack_array = np.stack(stack, axis=0)                           # Create a 3D array from the list of numpy array we created before 
-# #         basename, wavelength, stage = key                                    # Retrieve each component of our tuple, key, to name the output file
-# #         output_path = os.path.join(output_folder, f"{basename}_w{wavelength}_s{stage}_stack.tif")
-# #         imwrite(output_path, stack_array)
-# #         stack_files.append(output_path)
-# #         print(f"Saved stack: {output_path}")
+# # # # #         stack_array = np.stack(stack, axis=0)                           # Create a 3D array from the list of numpy array we created before 
+# # # # #         basename, wavelength, stage = key                                    # Retrieve each component of our tuple, key, to name the output file
+# # # # #         output_path = os.path.join(output_folder, f"{basename}_w{wavelength}_s{stage}_stack.tif")
+# # # # #         imwrite(output_path, stack_array)
+# # # # #         stack_files.append(output_path)
+# # # # #         print(f"Saved stack: {output_path}")
         
 
-# #     return stack_files
+# # # # #     return stack_files
 
 
 
@@ -107,9 +107,11 @@ def generate_random_crops(input, n_files, patterns, extension):
     #random_files=random.sample(glob.glob(os.path.join(input, "*.tif")), n_files)
     #random_files=random.sample(glob.glob(os.path.join(input, f"*{pattern}*{extension}")), n_files)
 
+    if patterns is None or len(patterns) == 0:
+        patterns = [""]
 
     random_files = random.sample(
-        [f for f in glob.glob(os.path.join(input, f"*{extension}"))
+        [f for f in sorted(glob.glob(os.path.join(input, f"*{extension}")))
         if all(p in os.path.basename(f) for p in patterns)],
         n_files
     )
@@ -119,6 +121,10 @@ def generate_random_crops(input, n_files, patterns, extension):
 
 
 def crop_img(rfiles, output_dir, size):
+    list_cropped_img = []  # List to store cropped images
+    print(len(rfiles))
+
+    
     for file in rfiles:
         print(file)
         img = tifffile.imread(file)
@@ -131,13 +137,17 @@ def crop_img(rfiles, output_dir, size):
         x = random.randint(0, w - size)
         y = random.randint(0, h - size)
         cropped_img = img[y:y + size, x:x + size]
+        list_cropped_img.append(cropped_img)
         tifffile.imwrite(os.path.join(output_dir, os.path.basename(file)), cropped_img)
+
+    print(len(list_cropped_img))
+    return list_cropped_img
 
 
 if __name__ == "__main__":
     
     INPUT = r"D:\COPPEY\Biolectricity\Dataset\20241105_densities_ibidi_rpe1_mdck"
-    OUTPUT = r"D:\micro_sam\Data"
+    OUTPUT = r"D:\micro_sam\Datasets\Output"
     
     rfiles = generate_random_crops(INPUT, 10, ["488"])        # TODO: make it a user input ? using args
 
