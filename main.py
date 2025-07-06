@@ -45,14 +45,6 @@ def launch_annotator3d(args):
         cropped_img = crop_img(sorted(rfiles), output_dir=args.output, size=args.crop_size)
 
         stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
-        # # cropped_img = crop_img(rfiles, output_dir=args.output, size=args.crop_size)
-        # # stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
-        # # # Forcer la forme (height, width, num_images)
-        # # # stack = np.transpose(stack, (1, 2, 0))
-        # # # print("After permute:", stack.shape)
-        # # print(f"Stack shape: {stack.shape}, dim: {stack.ndim}")
-        # # imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
-        # # print(f"Cropped images saved to {args.output}.")
         
         
     if args.segment:
@@ -65,16 +57,15 @@ def launch_annotator3d(args):
             print("patterns:", patterns)
             if patterns is None or len(patterns) == 0:
                 patterns = [""]
-            else:
-                print("Copying original images from input directory to output directory...")
-                # Copier tous les fichiers depuis args.input vers args.output
-                for filename in os.listdir(args.input):
-                    if all(p in filename for p in patterns):
-                        # Vérifier si le fichier correspond au modèle
-                        src_path = os.path.join(args.input, filename)
-                        dst_path = os.path.join(args.output, filename)
-                        if os.path.isfile(src_path):  # Ignore les sous-dossiers
-                            shutil.copy(src_path, dst_path)
+            print("Copying original images from input directory to output directory...")
+            # Copier tous les fichiers depuis args.input vers args.output
+            for filename in os.listdir(args.input):
+                if all(p in filename for p in patterns):
+                    # Vérifier si le fichier correspond au modèle
+                    src_path = os.path.join(args.input, filename)
+                    dst_path = os.path.join(args.output, filename)
+                    if os.path.isfile(src_path):  # Ignore les sous-dossiers
+                        shutil.copy(src_path, dst_path)
 
         print("Segmenting images from output directory...")
         run_cellpose_cli(input_folder=args.output, model_type=args.model, custom_model=args.custom_model, diameter=args.diameter)
@@ -92,8 +83,6 @@ def launch_annotator3d(args):
         print(f"Number of gradients loaded: {len(grads)}, with total shape: {grads[0].shape}")
 
         
-
-        # # imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
         # Sauvegarde
         save_path_mask = os.path.join(stack_dir, "masks_stacked.tif")
         imwrite(save_path_mask, np.stack(masks, axis=0), imagej=True)
@@ -107,17 +96,12 @@ def launch_annotator3d(args):
             tracked_files = sorted(glob.glob(os.path.join(args.output, "*_tracked.tif")))
             print(f"Found {len(tracked_files)} tracked files for stacking.")
             tracked = [imread(g) for g in tracked_files]
-            #print(f"Number of gradients loaded: {len(tracked)}, with total shape: {tracked[0].shape}")
+            # print(f"Number of gradients loaded: {len(tracked)}, with total shape: {tracked[0].shape}")
             
         
 
 
-    
-    # Forcer la forme (height, width, num_images)
-    # stack = np.transpose(stack, (1, 2, 0))
-    # print("After permute:", stack.shape)
     print(f"Stack shape: {stack.shape}, dim: {stack.ndim}")
-    # # imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
     # Sauvegarde
     save_path_raw = os.path.join(stack_dir, "raw_image_stacked.tif")
     imwrite(save_path_raw, stack, imagej=True)
@@ -182,30 +166,6 @@ def main():
     elif args.annotator3d:
         print("Launching 3D annotator...")
         launch_annotator3d(args)
-
-    # # if args.segment:
-    # #     print("Segmentation is activated.")
-    # #     run_cellpose_cli(input_folder=args.output, model_type=args.model, diameter=args.diameter)
-    # #     #tracking_centroids(input_folder=args.output)    # TODO Check si c'est des images 2D Pas besoin de tracking
-
-    # # if args.stack and args.crop:
-    # #     print("Stacking images and cropping...")
-    # #     stack_files = group_images_into_stacks(input_folder=args.input, output_folder=args.output)
-    # #     generate_random_crops_from_stacks(stack_files, n_crops=args.n_files, pattern=args.pattern, crop_size=args.crop_size, output_dir=args.output)
-    
-    # # elif args.stack:
-    # #     print("Stacking images...")
-    # #     stack_files = group_images_into_stacks(input_folder=args.input, output_folder=args.output)
-    
-    # # elif args.crop:
-    # #     print("Cropping images...")
-    # #     # Generate random crops
-    # #     rfiles = generate_random_crops(input=args.input, n_files=args.n_files, patterns=args.pattern, extension=args.extension)
-    # #     crop_img(rfiles, output_dir=args.output, size=args.crop_size)
-    
-    # # else:
-    # #     # Handle the case where neither --stack nor --crop is provided
-    # #     print("No stack or crop operation performed.")
 
 
 

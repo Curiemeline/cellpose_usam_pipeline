@@ -3,4 +3,14 @@
 pip_install.log
 micro_sam_env.txt
 packages.txt
+Data
+Data_output
+Data_test
+.DS_Store
+Data_cropped
+corrected_annotation
+Embeddings/
+Source/models
 Source/__pycache__
+*.tif
+*.npy
