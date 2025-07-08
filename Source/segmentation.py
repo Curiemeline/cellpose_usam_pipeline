@@ -69,7 +69,7 @@ DIAMETER = 120  # Approximate diameter of cells (set to 0 for auto-detection)
 
 ######################################################################## Cellpose segmentation ########################################################################
 
-def run_cellpose_cli(input_folder, model_type, custom_model, diameter, chan1=1, chan2=0):
+def run_cellpose_cli(input_folder, model_type, custom_model, diameter,  chan1=1, chan2=0):
 
     
     """
@@ -87,20 +87,28 @@ def run_cellpose_cli(input_folder, model_type, custom_model, diameter, chan1=1, 
     - str: Path to the generated mask .npy file.
     - str: Any stderr output for debugging.
     """
+    
 
-    # Construct the CLI command
+    
     command = [
-        "cellpose",
-        "--use_gpu",                            # Use GPU if available
-        "--verbose",
-        "--dir", input_folder,                  # Directory containing the images
-        "--pretrained_model", model_type,       # Model type
-        "--add_model", str(custom_model), 
-        "--chan", str(chan1),                   # Channel for grayscale
-        "--chan2", str(chan2),                  # Secondary channel
-        "--diameter", str(diameter),            # Cell diameter
-        "--save_tif"                            # Later, export it on cellpose_napari -> right click on the layer -> Convert to labels
+    "cellpose",
+
+    "--use_gpu",                            # Use GPU if available
+    "--verbose",
+    "--dir", input_folder,                  # Directory containing the images
+    # "--pretrained_model", model_type,
+    # "--chan", str(chan1),
+    # "--chan2", str(chan2),
+    # "--norm_percentile", "1", "99",
+    "--save_tif"                            # Later, export it on cellpose_napari -> right click on the layer -> Convert to labels
     ]
+
+    if diameter is not None:
+        command += ["--diameter", str(diameter)]
+    if model_type is not None:
+        command += ["--pretrained_model", model_type]
+    if custom_model is not None:
+        command += ["--add_model", custom_model]
 
     # Debugging: Print the command and types
     print("Command List:", command)
