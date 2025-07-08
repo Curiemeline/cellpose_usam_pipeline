@@ -10,6 +10,7 @@ import glob
 from tifffile import imwrite, imread
 import cv2
 from cellpose import models
+from natsort import natsorted
 
 def unstack_images(input_folder, output_folder):
     """
@@ -19,10 +20,11 @@ def unstack_images(input_folder, output_folder):
     
     for filename in os.listdir(input_folder):
         if filename.lower().endswith((".tif", ".tiff", ".TIF", ".TIFF")):     
-            print(f"Unstacking {filename}...")
+            
             filepath = os.path.join(input_folder, filename)
             img = imread(filepath)
             if img.ndim > 2:        # Check if the image has more than 2 dimensions, hence is a stack
+                print(f"Unstacking {filename}...")
                 for i in range(img.shape[0]):
                     basename = os.path.splitext(os.path.basename(filename))[0]  # os.path.splitext() splits the filename into basename and extension. Returns a tuple where the 1st element is the basename and the 2nd the extension ('.tif' in this example).
                     imwrite(os.path.join(output_folder, f"{basename}_{i}.tif"), img[i], imagej=True)
@@ -175,7 +177,7 @@ def launch_annotator3d(args):
         img_list = []
         print("Copying images from input to output for segmentation...")
         patterns = args.pattern if args.pattern else [""]
-        for filename in os.listdir(args.input):
+        for filename in natsorted(os.listdir(args.input)):
             if all(p in filename for p in patterns) and filename.lower().endswith((".tif", ".tiff")):
                 src_path = os.path.join(args.input, filename)
                 dst_path = os.path.join(args.output, filename)
@@ -206,18 +208,18 @@ def launch_annotator3d(args):
         cropped_img = crop_img(sorted(rfiles), output_dir=args.output, size=args.crop_size)
         stack = np.stack(cropped_img, axis=0)
 
+        imwrite(os.path.join(stack_dir, "raw_image_stacked.tif"), stack, imagej=True)
+        print(f"Saved raw image stack to {stack_dir}/raw_image_stacked.tif")
+
     # === 4. SEGMENTATION SI DEMANDÉE ===
     if args.segment:
         print("Resizing images in output directory to 512x512 before segmentation...")
         img_list = []
-        for filename in os.listdir(args.output):
+        for filename in natsorted(os.listdir(args.output)):     # natsorted is VERY important because it doesn't read in alphabetical order, so the original film is not read in the right order and messes up overlay with masks.
             if filename.lower().endswith((".tif", ".tiff")):
-                print(f"Resizing {filename}...")
                 frame_path = os.path.join(args.output, filename)
                 frame = imread(frame_path)
-                print(f"Original shape of {filename}: {frame.shape}")
                 resized = cv2.resize(frame, (512, 512), interpolation=cv2.INTER_LINEAR)
-                print(f"Resized shape of {filename}: {resized.shape}")
                 imwrite(frame_path, resized, imagej=True)
                 img_list.append(resized)
         stack = np.stack(img_list, axis=0)  # Stack the resized images along a new dimension
@@ -254,8 +256,8 @@ def launch_annotator3d(args):
     #     img_list = [imread(f) for f in raw_files]
     #     stack = np.stack(img_list, axis=0)
 
-    imwrite(os.path.join(stack_dir, "raw_image_stacked.tif"), stack, imagej=True)
-    print(f"Saved raw image stack to {stack_dir}/raw_image_stacked.tif")
+        imwrite(os.path.join(stack_dir, "raw_image_stacked.tif"), stack, imagej=True)
+        print(f"Saved raw image stack to {stack_dir}/raw_image_stacked.tif")
 
     # === 6. LANCEMENT DU VIEWER ===
     launch_3dannotation_viewer(args)

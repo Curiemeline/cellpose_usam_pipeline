@@ -166,8 +166,8 @@ from pathlib import Path
 def split_dataset(finetune_dir, train_ratio=0.8, seed=42):
     random.seed(seed)
 
-    finetune_dir = Path(finetune_dir)
-    output_dir = finetune_dir.parent 
+    finetune_dir = Path(finetune_dir)   # TODO Supposed to be output directory. Calling the variable finetune_dir might be misleading. 
+    output_dir = finetune_dir.parent    
     train_dir = output_dir / "Train"    # When working with Path object, we can use / instead of os.path.join
     test_dir = output_dir / "Test"
     
@@ -175,7 +175,7 @@ def split_dataset(finetune_dir, train_ratio=0.8, seed=42):
     for d in [train_dir, test_dir]:
         d.mkdir(parents=True, exist_ok=True)
 
-    # Lister tous les fichiers *_seg.npy (indique une image complète annotée)
+    # Lister tous les fichiers *_seg.npy 
     seg_files = list(finetune_dir.glob("*_seg.npy"))
     basenames = [f.stem.replace("_seg", "") for f in seg_files]
 

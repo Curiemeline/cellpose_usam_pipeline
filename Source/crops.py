@@ -109,7 +109,7 @@ def generate_random_crops(input, n_files, patterns, extension):
 
     if patterns is None or len(patterns) == 0:
         patterns = [""]
-
+    print(patterns)
     random_files = random.sample(
         [f for f in sorted(glob.glob(os.path.join(input, f"*{extension}")))
         if all(p in os.path.basename(f) for p in patterns)],
