@@ -285,7 +285,7 @@ def tracking_centroids(input_folder):
                     #print(frame_mask[int(centroid_y), int(centroid_x)])
 
                 if t == 0:
-                    print("t0", t)                                                              # First frame: Initialize tracking
+                                                                                  # First frame: Initialize tracking
                     relabeled_masks[t] = frame_mask                                     # Copy original labels
 
                     # # for label_id in np.unique(frame_mask):                              # Loop over all unique labels in the original mask  
