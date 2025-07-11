@@ -98,9 +98,10 @@ def finetune_cellpose(output_path):
     print(f"Train directory: {train_dir}")
     print(f"Test directory: {test_dir}")
     print(f"Save directory: {save_dir}")
+    
 
     output = io.load_train_test_data(str(train_dir), str(test_dir),
-                                    mask_filter="_cp_masks", look_one_level_down=False)  # !!! Need to add str to train_dir and test_dir because they are Path objects defined above, and io.load_train_test_data expects strings
+                                    mask_filter="_masks",look_one_level_down=False)  # !!! Need to add str to train_dir and test_dir because they are Path objects defined above, and io.load_train_test_data expects strings
     images, labels, image_names, test_images, test_labels, image_names_test = output
 
     print(len(test_labels))
@@ -108,33 +109,35 @@ def finetune_cellpose(output_path):
     print([lbl.shape for lbl in test_labels])
 
     # print(images[1].ndim)
-    model = models.CellposeModel(gpu=True, model_type='cpsam', pretrained_model='cpsam', diam_mean=80)
+    model = models.CellposeModel(gpu=True, pretrained_model='cpsam')
 
-    # Avant d'appeler train.train_seg
-    X, Y = [], []
-    for x, y in zip(images, labels):  # x et y ont chacun shape (83, 512, 512, 2)
-        # print("x",x.shape)
-        # print("y",y.shape)
-        X.append(x) # oblgiée de faire ça quand j'ai juste un 2D images comme par exemple (400, 400) et pas (83, 512, 512, 2)
-        Y.append(y)
-        # for t in range(x.shape[0]):
-        #     print("xt",x[t].shape)
-        #     print("yt",y[t].shape)
-        #     X.append(x[t])  # x[t] a shape (512, 512, 2)
-        #     Y.append(y[t])  # pareil pour le label
-        #     break
-        # break
+    # # Avant d'appeler train.train_seg
+    # X, Y = [], []
+    # for x, y in zip(images, labels):  # x et y ont chacun shape (83, 512, 512, 2)
+    #     # print("x",x.shape)
+    #     # print("y",y.shape)
+    #     X.append(x) # oblgiée de faire ça quand j'ai juste un 2D images comme par exemple (400, 400) et pas (83, 512, 512, 2)
+    #     Y.append(y)
+    #     # for t in range(x.shape[0]):
+    #     #     print("xt",x[t].shape)
+    #     #     print("yt",y[t].shape)
+    #     #     X.append(x[t])  # x[t] a shape (512, 512, 2)
+    #     #     Y.append(y[t])  # pareil pour le label
+    #     #     break
+    #     # break
 
 
-
+    model_name = "cpsam_100ep_lrdef_30im"
 
     model_path, train_losses, test_losses = train.train_seg(
         model.net,
-        train_data=X, train_labels=Y,
-        test_data=test_images, test_labels=test_labels,
-        weight_decay=1e-4, SGD=True, learning_rate=0.1,
-        n_epochs=60, model_name="cpsam_19tr_5te_60ep",
-        channel_axis=-1
+        train_data=images, train_labels=labels,
+        test_data=test_images, test_labels=test_labels, 
+        min_train_masks=1,
+        #weight_decay=1e-4,
+        #learning_rate=0.1,
+        n_epochs=100, model_name=model_name,
+        channel_axis=None # None pour 2D, -1 pour 3D (mais pas de 3D dans ce cas)
     )
 
 
@@ -151,7 +154,7 @@ def finetune_cellpose(output_path):
     plt.tight_layout()
 
     # Chemin de sauvegarde
-    save_path = os.path.join(save_dir, "loss_curve_cpsam_hand.png")
+    save_path = os.path.join(save_dir, f"loss_{model_name}.png")
     plt.savefig(save_path, dpi=300)
     print(f"Courbe de loss sauvegardée dans : {save_path}")
 
@@ -163,44 +166,100 @@ import shutil
 import random
 from pathlib import Path
 
+import shutil
+import random
+from pathlib import Path
+
 def split_dataset(finetune_dir, train_ratio=0.8, seed=42):
     random.seed(seed)
-
-    finetune_dir = Path(finetune_dir)   # TODO Supposed to be output directory. Calling the variable finetune_dir might be misleading. 
-    output_dir = finetune_dir.parent    
-    train_dir = output_dir / "Train"    # When working with Path object, we can use / instead of os.path.join
+    finetune_dir = Path(finetune_dir)
+    output_dir = finetune_dir.parent
+    train_dir = output_dir / "Train"
     test_dir = output_dir / "Test"
-    
-    # Création des dossiers
+
     for d in [train_dir, test_dir]:
         d.mkdir(parents=True, exist_ok=True)
 
-    # Lister tous les fichiers *_seg.npy 
-    seg_files = list(finetune_dir.glob("*_seg.npy"))
-    basenames = [f.stem.replace("_seg", "") for f in seg_files]
+    # Trouver les paires image/masque
+    image_files = [f for f in finetune_dir.glob("*.tif") if "_masks" not in f.name]
+    mask_files = list(finetune_dir.glob("*_masks.tif"))
 
-    random.shuffle(basenames)
-    split_idx = int(len(basenames) * train_ratio)
-    train_basenames = basenames[:split_idx]
-    test_basenames = basenames[split_idx:]
+    pairs = []
+    for img in image_files: 
+        name = img.stem  # ex: image_1
+        expected_mask = finetune_dir / f"{name}_masks.tif"  # We rebuild the path to the expected mask file to see if for example image_1_masks.tif exists
+        if expected_mask.exists():                          # This is more robust than using ```matching_masks = [m for m in mask_files if name in m.name]```, because image_1 is also IN image_10, so it would match image_10_masks.tif as well and image_1 won't appear in the list of files, hence finetuning will crash bc of missing mask.
+            pairs.append((img, expected_mask))
+        else:
+            print(f"Aucun masque trouvé pour {img.name}")
 
-    def move_files(basenames, dest_dir):
-        for base in basenames:
-            for ext in [".tif", "_cp_masks.tif", "_seg.npy"]:
-                if ext.startswith("_"):
-                    filename = f"{base}{ext}"
-                else:
-                    filename = f"{base}{ext}"
-                src = finetune_dir / filename
-                dst = dest_dir / filename
-                if src.exists():
-                    shutil.copy(src, dst)
-                else:
-                    print(f"Missing File : {src}")
+    # Shuffle + split
+    random.shuffle(pairs)
+    split_idx = int(len(pairs) * train_ratio)   
+    train_pairs = pairs[:split_idx]
+    test_pairs = pairs[split_idx:]
 
-    move_files(train_basenames, train_dir)
-    move_files(test_basenames, test_dir)
+    def copy_pairs(pairs, dest_dir):
+        for img_path, mask_path in pairs:
+            print(f"Processing pair: {img_path.name} and {mask_path.name}")
+            for f in [img_path, mask_path]:
+                dst = dest_dir / f.name
+                print(f"Copying {f} → {dst}")
+                shutil.copy(f, dst)
 
-    print(f"Dataset splitted : {len(train_basenames)} in train, {len(test_basenames)} in test")
+    copy_pairs(train_pairs, train_dir)
+    copy_pairs(test_pairs, test_dir)
+
+    print(f"Dataset split: {len(train_pairs)} train, {len(test_pairs)} test")
     return train_dir, test_dir
 
+
+
+# # def split_dataset(finetune_dir, train_ratio=0.8, seed=42):
+# #     random.seed(seed)
+# #     print("FINETUNE")
+# #     finetune_dir = Path(finetune_dir)   # TODO Supposed to be output directory. Calling the variable finetune_dir might be misleading. 
+# #     output_dir = finetune_dir.parent    
+# #     train_dir = output_dir / "Train"    # When working with Path object, we can use / instead of os.path.join
+# #     test_dir = output_dir / "Test"
+
+# #     print(f"Finetune directory: {finetune_dir}")
+# #     print(f"Train directory: {train_dir}")
+# #     print(f"Test directory: {test_dir}")
+    
+    
+# #     # Création des dossiers
+# #     for d in [train_dir, test_dir]:
+# #         d.mkdir(parents=True, exist_ok=True)
+
+# #     # Lister tous les fichiers *_seg.npy 
+# #     seg_files = list(finetune_dir.glob("*_seg.npy"))
+# #     basenames = [f.stem.replace("_seg", "") for f in seg_files]
+
+# #     random.shuffle(basenames)
+# #     split_idx = int(len(basenames) * train_ratio)
+# #     train_basenames = basenames[:split_idx]
+# #     test_basenames = basenames[split_idx:]
+
+# #     def move_files(basenames, dest_dir):
+# #         for base in basenames:
+# #             for ext in [".tif", "_cp_masks.tif", "_seg.npy"]:
+# #                 if ext.startswith("_"):
+# #                     filename = f"{base}{ext}"
+# #                 else:
+# #                     filename = f"{base}{ext}"
+# #                 src = finetune_dir / filename
+# #                 dst = dest_dir / filename
+# #                 if src.exists():
+# #                     shutil.copy(src, dst)
+# #                 else:
+# #                     print(f"Missing File : {src}")
+
+# #     move_files(train_basenames, train_dir)
+# #     move_files(test_basenames, test_dir)
+
+# #     print(f"Dataset splitted : {len(train_basenames)} in train, {len(test_basenames)} in test")
+# #     return train_dir, test_dir
+
+if __name__ == "__main__":
+    finetune_cellpose("D:\micro_sam\Datasets\Output")
