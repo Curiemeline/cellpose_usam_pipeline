@@ -111,12 +111,13 @@ def generate_random_crops(input, n_files, patterns, extension):
         patterns = [""]
     print(patterns)
     random_files = random.sample(
-        [f for f in sorted(glob.glob(os.path.join(input, f"*{extension}")))
+        [f for f in natsorted(glob.glob(os.path.join(input, f"*{extension}")))
         if all(p in os.path.basename(f) for p in patterns)],
         n_files
     )
-    
-    return random_files
+    for f in natsorted(random_files):
+        print("sorted random files: ",f)
+    return natsorted(random_files)
             
 
 
@@ -124,9 +125,9 @@ def crop_img(rfiles, output_dir, size):
     list_cropped_img = []  # List to store cropped images
     print(len(rfiles))
 
-    
-    for file in rfiles:
-        print(file)
+
+    for file in natsorted(rfiles):
+        print("cropped: ",file)
         img = tifffile.imread(file)
         h, w = img.shape[:2]
 

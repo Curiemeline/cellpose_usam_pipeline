@@ -29,133 +29,6 @@ def unstack_images(input_folder, output_folder):
                     basename = os.path.splitext(os.path.basename(filename))[0]  # os.path.splitext() splits the filename into basename and extension. Returns a tuple where the 1st element is the basename and the 2nd the extension ('.tif' in this example).
                     imwrite(os.path.join(output_folder, f"{basename}_{i}.tif"), img[i], imagej=True)
                     
-                    
-# # # # def launch_annotator3d(args):
-# # # #     """
-# # # #     Function to set the mode to 2D annotator in micro-sam.
-# # # #     """
-# # # #     # Unstack images if they are in a stack format
-# # # #     unstack_images(args.input, args.output)  
-
-# # # #     # Créer le chemin vers le dossier Stack (dans le dossier parent)
-# # # #     parent_dir = os.path.abspath(os.path.join(args.output, os.pardir))
-# # # #     stack_dir = os.path.join(parent_dir, "Stack")
-# # # #     os.makedirs(stack_dir, exist_ok=True)
-
-# # # #     if args.crop == False and args.segment == False:
-# # # #         print("no cropping nor segmentation, loading images from input directory...")
-
-# # # #         image_files = sorted([
-# # # #             os.path.join(args.input, f)
-# # # #             for f in os.listdir(args.input)
-# # # #             if f.lower().endswith((".tif", ".tiff", ".TIF", ".TIFF"))
-# # # #         ])
-
-# # # #         img_list = []
-# # # #         for img_path in image_files:
-# # # #             print(img_path)
-# # # #             img = imread(str(img_path))
-# # # #             img_list.append(img)
-        
-# # # #         stack = np.stack(img_list, axis=0)  # Stack the images along a new dimension
-# # # #         print("stacked original images")
-
-# # # #     if args.crop:
-# # # #         print("Cropping images before launching 2D annotator...")
-# # # #         rfiles = generate_random_crops(input=args.input, n_files=args.n_files, patterns=args.pattern, extension=args.extension)
-# # # #         print(f"Generated {len(rfiles)} random crops from the input directory.")
-# # # #         cropped_img = crop_img(sorted(rfiles), output_dir=args.output, size=args.crop_size)
-
-# # # #         stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
-# # # #         # # cropped_img = crop_img(rfiles, output_dir=args.output, size=args.crop_size)
-# # # #         # # stack = np.stack(cropped_img, axis=0)  # Stack the cropped images along a new dimension
-# # # #         # # # Forcer la forme (height, width, num_images)
-# # # #         # # # stack = np.transpose(stack, (1, 2, 0))
-# # # #         # # # print("After permute:", stack.shape)
-# # # #         # # print(f"Stack shape: {stack.shape}, dim: {stack.ndim}")
-# # # #         # # imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
-# # # #         # # print(f"Cropped images saved to {args.output}.")
-        
-        
-# # # #     if args.segment:
-# # # #         print("Segmenting...")
-# # # #         print(f"Input folder for segmentation: {args.output}")
-
-# # # #         if args.crop == False:
-# # # #             print("No cropping, copying original images from input directory to output directory...")
-# # # #             patterns = args.pattern
-# # # #             print("patterns:", patterns)
-# # # #             if patterns is None or len(patterns) == 0:
-# # # #                 patterns = [""]
-# # # #             else:
-# # # #                 print("Copying original images from input directory to output directory...")
-# # # #                 # Copier tous les fichiers depuis args.input vers args.output
-# # # #                 for filename in os.listdir(args.input):
-# # # #                     if all(p in filename for p in patterns):
-# # # #                         # Vérifier si le fichier correspond au modèle
-# # # #                         src_path = os.path.join(args.input, filename)
-# # # #                         dst_path = os.path.join(args.output, filename)
-# # # #                         if os.path.isfile(src_path):  # Ignore les sous-dossiers
-# # # #                             shutil.copy(src_path, dst_path)
-
-# # # #         print("Resizing images in output directory to 512x512...")
-# # # #         for filename in os.listdir(args.output):
-# # # #             print(filename)
-# # # #             frame = imread(os.path.join(args.output, filename)) 
-# # # #             frame = cv2.resize(frame, (512, 512), interpolation=cv2.INTER_LINEAR)
-# # # #             imwrite(os.path.join(os.basename(args.output), filename), frame, imagej=True)
-# # # #         print("Segmenting images from output directory...")
-# # # #         run_cellpose_cli(input_folder=args.output, model_type=args.model, custom_model=args.custom_model, diameter=args.diameter)
-# # # #         extract_grads_gray(input_folder=args.output)
-        
-
-# # # #         mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.tif")))
-# # # #         print(f"Found {len(mask_files)} mask files for stacking.")
-# # # #         masks = [imread(m) for m in mask_files]
-# # # #         print(f"Number of masks loaded: {len(masks)}, with total shape: {masks[0].shape}")
-
-# # # #         grads_files = sorted(glob.glob(os.path.join(args.output, "*_gradsXY_gray.tif")))
-# # # #         print(f"Found {len(grads_files)} gradient files for stacking.")
-# # # #         grads = [imread(g) for g in grads_files]
-# # # #         print(f"Number of gradients loaded: {len(grads)}, with total shape: {grads[0].shape}")
-
-        
-
-# # # #         # # imwrite(os.path.join(args.output, "masks_stacked.tif"), np.stack(masks, axis=0), imagej=True)  # (N, H, W)
-# # # #         # Sauvegarde
-# # # #         save_path_mask = os.path.join(stack_dir, "masks_stacked.tif")
-# # # #         imwrite(save_path_mask, np.stack(masks, axis=0), imagej=True)
-
-# # # #         save_path_grads = os.path.join(stack_dir, "grads_stacked.tif")
-# # # #         imwrite(save_path_grads, np.stack(grads, axis=0))
-
-# # # #         if args.tracking:
-# # # #             tracking_centroids(input_folder=stack_dir)
-            
-# # # #             tracked_files = sorted(glob.glob(os.path.join(args.output, "*_tracked.tif")))
-# # # #             print(f"Found {len(tracked_files)} tracked files for stacking.")
-# # # #             tracked = [imread(g) for g in tracked_files]
-# # # #             #print(f"Number of gradients loaded: {len(tracked)}, with total shape: {tracked[0].shape}")
-            
-        
-
-
-    
-# # # #     # Forcer la forme (height, width, num_images)
-# # # #     # stack = np.transpose(stack, (1, 2, 0))
-# # # #     # print("After permute:", stack.shape)
-# # # #     print(f"Stack shape: {stack.shape}, dim: {stack.ndim}")
-# # # #     # # imwrite(os.path.join(args.output, "raw_image_stacked.tif"), stack, imagej=True)  # imagej to write a multi-page TIF compatible with ImageJ, with correctly interpreted dimensions and metadata
-# # # #     # Sauvegarde
-# # # #     save_path_raw = os.path.join(stack_dir, "raw_image_stacked.tif")
-# # # #     imwrite(save_path_raw, stack, imagej=True)
-# # # #     print(f"Cropped images saved to {args.output}.")
-           
-# # # #     launch_3dannotation_viewer(args)
-
-    
-
-
 
 def launch_annotator3d(args):
     """
@@ -230,11 +103,11 @@ def launch_annotator3d(args):
         extract_grads_gray(input_folder=args.output)
 
         # Chargement des masques
-        mask_files = sorted(glob.glob(os.path.join(args.output, "*_cp_masks.tif")))
+        mask_files = natsorted(glob.glob(os.path.join(args.output, "*_cp_masks.tif")))
         print(f"Found {len(mask_files)} mask files.")
         masks = [imread(m) for m in mask_files]
 
-        grads_files = sorted(glob.glob(os.path.join(args.output, "*_gradsXY_gray.tif")))
+        grads_files = natsorted(glob.glob(os.path.join(args.output, "*_gradsXY_gray.tif")))
         print(f"Found {len(grads_files)} gradient files.")
         grads = [imread(g).astype(np.float32) for g in grads_files]
 
@@ -261,26 +134,6 @@ def launch_annotator3d(args):
 
     # === 6. LANCEMENT DU VIEWER ===
     launch_3dannotation_viewer(args)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

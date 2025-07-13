@@ -29,30 +29,44 @@ def save_mask_as_tif(viewer):
         show_info_message(viewer, "Aucune couche 'committed_objects' trouvée.")
         return
 
+    image = viewer.layers["committed_objects"].data
     mask_data = viewer.layers["committed_objects"].data
 
-    save_path, _ = QFileDialog.getSaveFileName(caption="Enregistrer le masque", filter="tif files (*.tif)")
-    if not save_path:
+    if mask_data.shape[0] != image.shape[0]:
+        show_info_message(viewer, "Le nombre de frames ne correspond pas entre les images et les masques.")
         return
 
-    if not save_path.endswith(".tif"):
-        save_path += ".tif"
-
-    imwrite(save_path, mask_data)
-
-    print("dim: ", mask_data.ndim)
+    # Demande un dossier de sauvegarde
+    output_dir = QFileDialog.getExistingDirectory(caption="Choisir un dossier pour enregistrer les images et masques")
+    if not output_dir:
+        return
     
-    if mask_data.ndim > 2:
-        print(f"Le masque a {mask_data.shape[0]} couches.")
-        for i in range(mask_data.shape[0]):
-            mask = mask_data[i, ...] if mask_data.ndim > 1 else mask_data    # *Expression ternaire* qui prend la i-ème couche du masque si le masque a plus d'une dimension, sinon le garde tel quel
-                                                                                    # pour un array (10, 512, 512), ça revient à mask_data[i, :, :]. C'est une ellipse qui prends l’indice i sur le premier axe, et garde les autres dimensions telles quelles
-            
-            imwrite(save_path.replace(".tif", f"_{i}.tif"), mask)
-            print(f"Masque {i} sauvegardé à {save_path}")
+    # Force les données en liste de frames pour unifier les cas
+    if mask_data.ndim == 2:
+        image_frames = [image]
+        mask_frames = [mask_data]
+    elif mask_data.ndim == 3:
+        if mask_data.shape[0] != image.shape[0]:
+            show_info_message(viewer, "Le nombre de frames ne correspond pas entre les images et les masques.")
+            return
+        image_frames = image
+        mask_frames = mask_data
+    else:
+        show_info_message(viewer, f"Format non supporté : ndim = {mask_data.ndim}")
+        return
 
-    
-    show_info_message(viewer, f"Masque sauvegardé au format Cellpose :\n{save_path}")
+    for i, (img, msk) in enumerate(zip(image_frames, mask_frames)):
+        image_filename = os.path.join(output_dir, f"image_{i}.tif")
+        mask_filename = os.path.join(output_dir, f"image_{i}_masks.tif")
+
+        imwrite(image_filename, img.astype('uint16'))
+        imwrite(mask_filename, msk.astype('uint16'))
+
+        print(f"Frame {i} sauvegardée :")
+        print(f"  -> Image : {image_filename}")
+        print(f"  -> Masque : {mask_filename}")
+
+    show_info_message(viewer, f"{len(image_frames)} image(s) et masque(s) sauvegardés dans :\n{output_dir}")
 
 def add_save_button(viewer):
     btn = QPushButton("Sauver masque pour Cellpose")
