@@ -81,7 +81,7 @@ import matplotlib.pyplot as plt
 import os
 import torch
 
-def finetune_cellpose(output_path):
+def finetune_cellpose(output_path, epochs, lr, model_name):
     # train_dir = "/Users/emeline.fratacci/Unit/micro_sam/cellpose_usam_pipeline/Data_output"
     # test_dir = "/Users/emeline.fratacci/Unit/micro_sam/cellpose_usam_pipeline/Data_test"
     
@@ -127,16 +127,16 @@ def finetune_cellpose(output_path):
     #     # break
 
 
-    model_name = "cpsam_100ep_lrdef_30im"
-
+    #model_name = "cpsam_100ep_lrdef_30im"
+    print("lr: ", lr, "epochs: ", epochs)
     model_path, train_losses, test_losses = train.train_seg(
         model.net,
         train_data=images, train_labels=labels,
         test_data=test_images, test_labels=test_labels, 
         min_train_masks=1,
         #weight_decay=1e-4,
-        #learning_rate=0.1,
-        n_epochs=100, model_name=model_name,
+        learning_rate=lr,
+        n_epochs=epochs, model_name=model_name,
         channel_axis=None # None pour 2D, -1 pour 3D (mais pas de 3D dans ce cas)
     )
 

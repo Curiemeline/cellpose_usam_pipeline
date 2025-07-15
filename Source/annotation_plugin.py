@@ -9,6 +9,7 @@ import micro_sam
 from micro_sam.sam_annotator.annotator_2d import annotator_2d
 print(dir(micro_sam))
 from tifffile import imwrite
+from Source.interface import add_custom_ui_sections
 
 from Source.finetune import finetune_cellpose, split_dataset
 
@@ -29,7 +30,7 @@ def save_mask_as_tif(viewer):
         show_info_message(viewer, "Aucune couche 'committed_objects' trouvée.")
         return
 
-    image = viewer.layers["committed_objects"].data
+    image = viewer.layers["image"].data
     mask_data = viewer.layers["committed_objects"].data
 
     if mask_data.shape[0] != image.shape[0]:
@@ -198,6 +199,7 @@ def launch_2dannotation_viewer(args):
 
     # Étape 4. Lancer le viewer avec tout préchargé
     viewer = napari.Viewer()
+    
     add_save_button(viewer)
     add_finetune_button(viewer, args)
 
@@ -268,8 +270,9 @@ def launch_3dannotation_viewer(args):
 
     # Étape 4. Lancer le viewer avec tout préchargé
     viewer = napari.Viewer()
-    add_save_button(viewer)
-    add_finetune_button(viewer, args)
+    add_custom_ui_sections(viewer)
+    #add_save_button(viewer)
+    #add_finetune_button(viewer, args)
 
     viewer = annotator_3d(
         viewer=viewer,

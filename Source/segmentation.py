@@ -103,7 +103,12 @@ def run_cellpose_cli(input_folder, model_type, custom_model, diameter,  chan1=1,
     "--save_tif"                            # Later, export it on cellpose_napari -> right click on the layer -> Convert to labels
     ]
 
+    if diameter == 0:
+        print("Converting 0 to None")
+        diameter = None
+        print("New diameter value:", diameter)
     if diameter is not None:
+        print("diameter should be none", diameter)
         command += ["--diameter", str(diameter)]
     if model_type is not None:
         command += ["--pretrained_model", model_type]
