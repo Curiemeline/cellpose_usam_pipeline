@@ -87,9 +87,9 @@ def finetune_cellpose(output_path):
     
     output_path = Path(output_path)
     print(output_path)
-    train_dir = output_path.parent / "Train"
-    test_dir = output_path.parent / "Test"
-    save_dir = output_path.parent.parent / "Models"
+    train_dir = output_path / "Train"
+    test_dir = output_path / "Test"
+    save_dir = output_path.parent / "Models"
 
     save_dir.mkdir(parents=True, exist_ok=True)
     train_dir.mkdir(parents=True, exist_ok=True)
@@ -173,7 +173,7 @@ from pathlib import Path
 def split_dataset(finetune_dir, train_ratio=0.8, seed=42):
     random.seed(seed)
     finetune_dir = Path(finetune_dir)
-    output_dir = finetune_dir.parent
+    output_dir = finetune_dir
     train_dir = output_dir / "Train"
     test_dir = output_dir / "Test"
 

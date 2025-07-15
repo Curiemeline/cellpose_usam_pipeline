@@ -108,7 +108,8 @@ def run_cellpose_cli(input_folder, model_type, custom_model, diameter,  chan1=1,
     if model_type is not None:
         command += ["--pretrained_model", model_type]
     if custom_model is not None:
-        command += ["--add_model", custom_model]
+        #command += ["--add_model", custom_model]
+        command += ["--pretrained_model", custom_model]
 
     # Debugging: Print the command and types
     print("Command List:", command)

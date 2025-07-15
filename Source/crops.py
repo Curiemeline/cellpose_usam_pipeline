@@ -2,7 +2,7 @@ import os, random, glob, cv2, tifffile, argparse, re
 import numpy as np
 from tifffile import imwrite, imread, TiffWriter
 from natsort import natsorted
-
+from tifffile import TiffFile
 ############################################################################################## WIP 
 
 # # # # # def group_images_into_stacks(input_folder, output_folder):
@@ -110,9 +110,14 @@ def generate_random_crops(input, n_files, patterns, extension):
     if patterns is None or len(patterns) == 0:
         patterns = [""]
     print(patterns)
+    for a in natsorted(glob.glob(os.path.join(input, f"*{extension}"))):
+        print("file: ", a)
+        print("len tifffile: ", len(TiffFile(a).series[0].shape))
+    
     random_files = random.sample(
         [f for f in natsorted(glob.glob(os.path.join(input, f"*{extension}")))
-        if all(p in os.path.basename(f) for p in patterns)],
+        if all(p in os.path.basename(f) for p in patterns)
+        and len(TiffFile(f).series[0].shape) <3],
         n_files
     )
     for f in natsorted(random_files):

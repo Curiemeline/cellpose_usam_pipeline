@@ -29,7 +29,7 @@ def save_mask_as_tif(viewer):
         show_info_message(viewer, "Aucune couche 'committed_objects' trouvée.")
         return
 
-    image = viewer.layers["committed_objects"].data
+    image = viewer.layers["image"].data
     mask_data = viewer.layers["committed_objects"].data
 
     if mask_data.shape[0] != image.shape[0]:
@@ -75,8 +75,8 @@ def add_save_button(viewer):
 
 
 def on_finetune_button_clicked(viewer, args):
-    split_dataset(finetune_dir=args.output)
-    finetune_cellpose(output_path=args.output)
+    split_dataset(finetune_dir=args.finetune_dir)
+    finetune_cellpose(output_path=args.finetune_dir)
     show_info_message(viewer, "Finetuning terminé. Modèle sauvegardé dans le dossier 'Models'.")
 
 
